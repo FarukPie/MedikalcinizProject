@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 };
 
 import { Footer } from "@/components/footer";
+import { FooterWrapper } from "@/components/footer-wrapper";
 
 export default function RootLayout({
   children,
@@ -21,12 +22,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr">
+    <html lang="tr" suppressHydrationWarning>
       <body
-        className={`${plusJakartaSans.variable} font-sans antialiased bg-slate-50 pt-20`}
+        className={`${plusJakartaSans.variable} font-sans antialiased bg-slate-50`}
       >
         {children}
-        <Footer />
+        <FooterWrapper>
+          <Footer />
+        </FooterWrapper>
         <Toaster />
       </body>
     </html>
