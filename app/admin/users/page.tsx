@@ -110,7 +110,11 @@ export default async function UsersPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <UserActionsCell user={user} />
+                                        <UserActionsCell user={{
+                                            ...user,
+                                            createdAt: user.createdAt.toISOString(),
+                                            updatedAt: user.updatedAt.toISOString()
+                                        }} />
                                     </TableCell>
                                 </TableRow>
                             ))

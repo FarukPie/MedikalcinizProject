@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { User } from "@prisma/client";
 
 interface UserActionsCellProps {
-    user: User;
+    user: any;
 }
 
 export function UserActionsCell({ user }: UserActionsCellProps) {

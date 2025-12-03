@@ -27,7 +27,7 @@ import { createUser, updateUser } from "@/lib/actions/user";
 import { User } from "@prisma/client";
 
 interface UserDialogProps {
-    userToEdit?: User;
+    userToEdit?: any;
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
 }
