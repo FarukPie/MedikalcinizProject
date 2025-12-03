@@ -1,6 +1,7 @@
 'use server'
 import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { Product, Category } from '@prisma/client'
 
 export async function createProduct(data: any) {
     try {
@@ -87,8 +88,10 @@ export async function getFeaturedProducts() {
                 createdAt: 'desc',
             },
         })
-        return products.map(product => ({
+        return products.map((product: Product & { category: Category | null }) => ({
             ...product,
+            buyPrice: Number(product.buyPrice),
+            sellPrice: Number(product.sellPrice),
             price: Number(product.sellPrice)
         }))
     } catch (error) {
@@ -138,6 +141,8 @@ export async function getProductById(id: string) {
         if (!product) return null
         return {
             ...product,
+            buyPrice: Number(product.buyPrice),
+            sellPrice: Number(product.sellPrice),
             price: Number(product.sellPrice)
         }
     } catch (error) {
@@ -174,8 +179,10 @@ export async function getProducts({
             include: { category: true },
             orderBy: { createdAt: 'desc' },
         });
-        return products.map(product => ({
+        return products.map((product: Product & { category: Category | null }) => ({
             ...product,
+            buyPrice: Number(product.buyPrice),
+            sellPrice: Number(product.sellPrice),
             price: Number(product.sellPrice)
         }));
     } catch (error) {
