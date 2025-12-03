@@ -73,7 +73,7 @@ export async function deleteProduct(id: string) {
     }
 }
 
-export async function getFeaturedProducts() {
+export async function getFeaturedProducts(): Promise<(Omit<Product, 'buyPrice' | 'sellPrice'> & { buyPrice: number, sellPrice: number, price: number, category: Category | null })[]> {
     try {
         const products = await prisma.product.findMany({
             where: {
@@ -100,7 +100,7 @@ export async function getFeaturedProducts() {
     }
 }
 
-export async function getAllCategories() {
+export async function getAllCategories(): Promise<Category[]> {
     try {
         const categories = await prisma.category.findMany({
             orderBy: {
@@ -128,7 +128,7 @@ export async function getWarehouses() {
     }
 }
 
-export async function getProductById(id: string) {
+export async function getProductById(id: string): Promise<(Omit<Product, 'buyPrice' | 'sellPrice'> & { buyPrice: number, sellPrice: number, price: number, category: Category | null }) | null> {
     try {
         const product = await prisma.product.findUnique({
             where: {
@@ -157,7 +157,7 @@ export async function getProducts({
 }: {
     search?: string;
     category?: string;
-}) {
+}): Promise<(Omit<Product, 'buyPrice' | 'sellPrice'> & { buyPrice: number, sellPrice: number, price: number, category: Category | null })[]> {
     try {
         const products = await prisma.product.findMany({
             where: {

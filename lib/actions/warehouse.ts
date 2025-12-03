@@ -2,8 +2,13 @@
 
 import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { Warehouse, Product, Category } from '@prisma/client'
 
-export async function getWarehousesWithStats() {
+export async function getWarehousesWithStats(): Promise<(Warehouse & {
+    products: (Omit<Product, 'buyPrice' | 'sellPrice'> & { buyPrice: number, sellPrice: number, category: Category | null })[];
+    totalProducts: number;
+    totalStock: number;
+})[]> {
     try {
         const warehouses = await prisma.warehouse.findMany({
             include: {

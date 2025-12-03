@@ -23,8 +23,8 @@ import { ProductCard } from "@/components/product-card";
 import { Product, Category } from "@prisma/client";
 
 interface ProductDetailViewProps {
-    product: Omit<Product, "price"> & { price: number; category: Category | null };
-    similarProducts: (Omit<Product, "price"> & { price: number; category: Category | null })[];
+    product: Omit<Product, "price" | "buyPrice" | "sellPrice"> & { price: number; buyPrice: number; sellPrice: number; category: Category | null };
+    similarProducts: (Omit<Product, "price" | "buyPrice" | "sellPrice"> & { price: number; buyPrice: number; sellPrice: number; category: Category | null })[];
 }
 
 export function ProductDetailView({ product, similarProducts }: ProductDetailViewProps) {

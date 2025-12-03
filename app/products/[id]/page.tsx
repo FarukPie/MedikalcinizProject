@@ -29,7 +29,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     // Fetch similar products (same category, excluding current product)
     const similarProducts = await getProducts({ category: product.category?.slug });
     const filteredSimilarProducts = similarProducts
-        .filter((p: any) => p.id !== product.id)
+        .filter((p) => p.id !== product.id)
         .slice(0, 4);
 
     // Convert Decimal to number for serialization
@@ -38,7 +38,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         price: Number(product.price)
     };
 
-    const serializedSimilarProducts = filteredSimilarProducts.map((p: any) => ({
+    const serializedSimilarProducts = filteredSimilarProducts.map((p) => ({
         ...p,
         price: Number(p.price)
     }));

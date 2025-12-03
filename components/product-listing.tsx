@@ -16,7 +16,7 @@ import { useState, useEffect } from "react";
 import { Product, Category } from "@prisma/client";
 
 interface ProductListingProps {
-    initialProducts: (Omit<Product, "price"> & { price: number; category: Category | null })[];
+    initialProducts: (Omit<Product, "price" | "buyPrice" | "sellPrice"> & { price: number; buyPrice: number; sellPrice: number; category: Category | null })[];
     categories: Category[];
 }
 

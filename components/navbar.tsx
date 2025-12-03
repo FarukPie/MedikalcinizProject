@@ -26,7 +26,7 @@ function NavbarContent() {
     const searchParams = useSearchParams();
     const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
     const debouncedSearch = useDebounce(searchQuery, 300);
-    const [searchResults, setSearchResults] = useState<(Omit<Product, "price"> & { price: number; category: Category | null })[]>([]);
+    const [searchResults, setSearchResults] = useState<(Omit<Product, "price" | "buyPrice" | "sellPrice"> & { price: number; buyPrice: number; sellPrice: number; category: Category | null })[]>([]);
     const [showDropdown, setShowDropdown] = useState(false);
     const searchRef = useRef<HTMLDivElement>(null);
 

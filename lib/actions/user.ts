@@ -3,9 +3,9 @@
 import prisma from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import bcrypt from "bcryptjs"
-import { UserRole } from "@prisma/client"
+import { UserRole, User, Prisma } from "@prisma/client"
 
-export async function getUsers() {
+export async function getUsers(): Promise<User[]> {
     try {
         const users = await prisma.user.findMany({
             orderBy: {
@@ -133,33 +133,10 @@ export async function updateUser(formData: FormData) {
             return { success: false, message: "Bu e-posta adresi ile kayıtlı başka bir kullanıcı var." }
         }
 
-        // Prepare update data
-        const updateData: any = {
-            name,
-            surname,
-            email,
-            phone,
-            company,
-            // description is not in User model based on previous read, but was in create? 
-            // Wait, createUser had description but schema didn't show it in User model in previous read.
-            // Let me check schema again. User model has: id, email, password, name, surname, phone, company, role, createdAt, updatedAt, assignedRoleId.
-            // It does NOT have description. The createUser function was getting description but likely ignoring it or I missed it in schema.
-            // Re-reading schema... User model: id, email, password, name, surname, phone, company, role...
-            // It seems description is NOT in User model. I will ignore it for now or check if I missed it.
-            // Actually, looking at createUser in previous turn, it extracts description but doesn't use it in prisma.user.create data.
-            // So I will ignore description here too.
-        }
-
-        // Handle password
-        if (password && password.trim() !== "") {
-            updateData.password = await bcrypt.hash(password, 10)
-        }
-
         // Map form role to UserRole enum
         let userRole: UserRole = UserRole.CUSTOMER
         if (roleName === 'admin') userRole = UserRole.ADMIN
         if (roleName === 'sales') userRole = UserRole.SALES
-        updateData.role = userRole
 
         // Find corresponding Role record for permissions
         let assignedRoleId = null
@@ -174,7 +151,22 @@ export async function updateUser(formData: FormData) {
         } catch (e) {
             console.warn("Could not find role record for", roleName)
         }
-        updateData.assignedRoleId = assignedRoleId
+
+        // Prepare update data
+        const updateData: Prisma.UserUpdateInput = {
+            name,
+            surname,
+            email,
+            phone,
+            company,
+            role: userRole,
+            assignedRole: assignedRoleId ? { connect: { id: assignedRoleId } } : { disconnect: true }
+        }
+
+        // Handle password
+        if (password && password.trim() !== "") {
+            updateData.password = await bcrypt.hash(password, 10)
+        }
 
         // Update User
         await prisma.user.update({
