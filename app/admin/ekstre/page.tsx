@@ -1,5 +1,3 @@
-"use client";
-
 import {
     TrendingUp,
     TrendingDown,
@@ -21,100 +19,10 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-
-// Mock Data
-const TRANSACTIONS = [
-    {
-        id: 1,
-        date: "03 Kas 2024",
-        account: "Sağlık Malzemeleri Ltd.",
-        description: "Ödeme Alındı - Havale",
-        orderNo: "-",
-        type: "credit", // Alacak
-        amount: 9800.00,
-        balance: 2000.00
-    },
-    {
-        id: 2,
-        date: "02 Kas 2024",
-        account: "Tıbbi Cihazlar",
-        description: "Tahsilat Makbuzu #1234",
-        orderNo: "-",
-        type: "credit", // Alacak
-        amount: 45000.00,
-        balance: 11800.00
-    },
-    {
-        id: 3,
-        date: "02 Kas 2024",
-        account: "Medikalciniz A.Ş.",
-        description: "Fatura #FTR-2024-089",
-        orderNo: "SIP-2024-002",
-        type: "debt", // Borç
-        amount: 12300.00,
-        balance: 56800.00
-    },
-    {
-        id: 4,
-        date: "01 Kas 2024",
-        account: "Özel Klinik",
-        description: "Fatura #FTR-2024-088",
-        orderNo: "SIP-2024-001",
-        type: "debt",
-        amount: 4500.00,
-        balance: 44500.00
-    },
-    {
-        id: 5,
-        date: "30 Eki 2024",
-        account: "Şehir Hastanesi",
-        description: "Ödeme Alındı - EFT",
-        orderNo: "-",
-        type: "credit",
-        amount: 15000.00,
-        balance: 40000.00
-    },
-    {
-        id: 6,
-        date: "28 Eki 2024",
-        account: "Medikal Depo A.Ş.",
-        description: "Fatura #FTR-2024-085",
-        orderNo: "SIP-2024-003",
-        type: "debt",
-        amount: 8450.50,
-        balance: 55000.00
-    },
-    {
-        id: 7,
-        date: "25 Eki 2024",
-        account: "Sağlık Malzemeleri Ltd.",
-        description: "Fatura #FTR-2024-082",
-        orderNo: "SIP-2024-005",
-        type: "debt",
-        amount: 3200.00,
-        balance: 46549.50
-    },
-    {
-        id: 8,
-        date: "24 Eki 2024",
-        account: "Tıbbi Cihazlar",
-        description: "Ödeme Alındı - Kredi Kartı",
-        orderNo: "-",
-        type: "credit",
-        amount: 2500.00,
-        balance: 43349.50
-    },
-    {
-        id: 9,
-        date: "20 Eki 2024",
-        account: "Medikalciniz A.Ş.",
-        description: "Açılış Bakiyesi",
-        orderNo: "-",
-        type: "debt",
-        amount: 45849.50,
-        balance: 45849.50
-    }
-];
+import { getFinanceData } from "@/lib/actions/finance";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
+import { TransactionType } from "@prisma/client";
 
 function formatCurrency(amount: number) {
     return new Intl.NumberFormat("tr-TR", {
@@ -123,7 +31,9 @@ function formatCurrency(amount: number) {
     }).format(amount);
 }
 
-export default function StatementsPage() {
+export default async function StatementsPage() {
+    const { stats, transactions } = await getFinanceData();
+
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Header */}
@@ -150,7 +60,7 @@ export default function StatementsPage() {
                     <CardContent className="p-6 flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-slate-500">Toplam Borç</p>
-                            <h3 className="text-2xl font-bold text-red-600 mt-1">₺100.300,00</h3>
+                            <h3 className="text-2xl font-bold text-red-600 mt-1">{formatCurrency(stats.totalDebt)}</h3>
                         </div>
                         <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
                             <TrendingUp className="w-5 h-5 text-red-600" />
@@ -162,7 +72,7 @@ export default function StatementsPage() {
                     <CardContent className="p-6 flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-slate-500">Toplam Alacak</p>
-                            <h3 className="text-2xl font-bold text-emerald-600 mt-1">₺98.300,00</h3>
+                            <h3 className="text-2xl font-bold text-emerald-600 mt-1">{formatCurrency(stats.totalCredit)}</h3>
                         </div>
                         <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center">
                             <TrendingDown className="w-5 h-5 text-emerald-600" />
@@ -175,8 +85,12 @@ export default function StatementsPage() {
                         <div>
                             <p className="text-sm font-medium text-slate-500">Güncel Bakiye</p>
                             <div className="flex items-baseline gap-2">
-                                <h3 className="text-2xl font-bold text-red-600 mt-1">₺2.000,00</h3>
-                                <span className="text-xs font-medium text-slate-400">Borç</span>
+                                <h3 className={`text-2xl font-bold mt-1 ${stats.currentBalance >= 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                                    {formatCurrency(Math.abs(stats.currentBalance))}
+                                </h3>
+                                <span className="text-xs font-medium text-slate-400">
+                                    {stats.currentBalance >= 0 ? 'Borç' : 'Alacak'}
+                                </span>
                             </div>
                         </div>
                         <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
@@ -189,7 +103,7 @@ export default function StatementsPage() {
                     <CardContent className="p-6 flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-slate-500">İşlem Sayısı</p>
-                            <h3 className="text-2xl font-bold text-slate-900 mt-1">9</h3>
+                            <h3 className="text-2xl font-bold text-slate-900 mt-1">{stats.transactionCount}</h3>
                         </div>
                         <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
                             <Activity className="w-5 h-5 text-slate-500" />
@@ -216,34 +130,49 @@ export default function StatementsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {TRANSACTIONS.map((transaction) => (
-                            <TableRow key={transaction.id} className="hover:bg-slate-50/50 border-slate-100">
-                                <TableCell className="font-medium text-slate-900">{transaction.date}</TableCell>
-                                <TableCell className="text-slate-600">{transaction.account}</TableCell>
-                                <TableCell className="text-slate-600">{transaction.description}</TableCell>
-                                <TableCell className="text-slate-600 font-mono text-xs">{transaction.orderNo}</TableCell>
-                                <TableCell>
-                                    {transaction.type === "credit" ? (
-                                        <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 gap-1 pl-1 pr-2">
-                                            <ArrowDown className="w-3 h-3" />
-                                            Alacak
-                                        </Badge>
-                                    ) : (
-                                        <Badge variant="secondary" className="bg-red-100 text-red-700 hover:bg-red-100 gap-1 pl-1 pr-2">
-                                            <ArrowUp className="w-3 h-3" />
-                                            Borç
-                                        </Badge>
-                                    )}
-                                </TableCell>
-                                <TableCell className={`text-right font-bold ${transaction.type === "credit" ? "text-emerald-600" : "text-red-600"
-                                    }`}>
-                                    {transaction.type === "credit" ? "-" : "+"}{formatCurrency(transaction.amount)}
-                                </TableCell>
-                                <TableCell className="text-right font-bold text-red-600">
-                                    {formatCurrency(transaction.balance)}
+                        {transactions.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={7} className="text-center py-8 text-slate-500">
+                                    Henüz işlem bulunmuyor.
                                 </TableCell>
                             </TableRow>
-                        ))}
+                        ) : (
+                            transactions.map((transaction: any) => (
+                                <TableRow key={transaction.id} className="hover:bg-slate-50/50 border-slate-100">
+                                    <TableCell className="font-medium text-slate-900">
+                                        {format(new Date(transaction.date), "d MMM yyyy", { locale: tr })}
+                                    </TableCell>
+                                    <TableCell className="text-slate-600">{transaction.partnerName}</TableCell>
+                                    <TableCell className="text-slate-600">
+                                        {transaction.description}
+                                        {transaction.invoiceNumber && ` #${transaction.invoiceNumber}`}
+                                    </TableCell>
+                                    <TableCell className="text-slate-600 font-mono text-xs">
+                                        {transaction.orderNumber || '-'}
+                                    </TableCell>
+                                    <TableCell>
+                                        {transaction.type === TransactionType.CREDIT ? (
+                                            <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 gap-1 pl-1 pr-2">
+                                                <ArrowDown className="w-3 h-3" />
+                                                Alacak
+                                            </Badge>
+                                        ) : (
+                                            <Badge variant="secondary" className="bg-red-100 text-red-700 hover:bg-red-100 gap-1 pl-1 pr-2">
+                                                <ArrowUp className="w-3 h-3" />
+                                                Borç
+                                            </Badge>
+                                        )}
+                                    </TableCell>
+                                    <TableCell className={`text-right font-bold ${transaction.type === TransactionType.CREDIT ? "text-emerald-600" : "text-red-600"
+                                        }`}>
+                                        {transaction.type === TransactionType.CREDIT ? "-" : "+"}{formatCurrency(transaction.amount)}
+                                    </TableCell>
+                                    <TableCell className={`text-right font-bold ${transaction.balance >= 0 ? "text-red-600" : "text-emerald-600"}`}>
+                                        {formatCurrency(Math.abs(transaction.balance))}
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
                     </TableBody>
                 </Table>
             </div>

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -28,16 +29,32 @@ export default function LoginPage() {
         e.preventDefault();
         setIsLoading(true);
 
-        // Simulate login delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        try {
+            const result = await signIn("credentials", {
+                email: formData.email,
+                password: formData.password,
+                redirect: false,
+            });
 
-        toast.success("Giriş başarılı!", {
-            description: "Admin paneline yönlendiriliyorsunuz...",
-            duration: 2000,
-        });
-
-        // Redirect to Admin Panel
-        router.push("/admin");
+            if (result?.error) {
+                toast.error("Giriş başarısız", {
+                    description: "Hatalı e-posta veya şifre.",
+                });
+            } else {
+                toast.success("Giriş başarılı!", {
+                    description: "Admin paneline yönlendiriliyorsunuz...",
+                    duration: 2000,
+                });
+                // Force full reload to ensure session is picked up by middleware
+                window.location.href = "/admin";
+            }
+        } catch (error) {
+            toast.error("Bir hata oluştu", {
+                description: "Lütfen daha sonra tekrar deneyin.",
+            });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (

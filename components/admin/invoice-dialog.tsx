@@ -159,179 +159,175 @@ export function InvoiceDialog({ partners, products }: InvoiceDialogProps) {
 
                 <div className="flex-1 overflow-y-auto p-6 space-y-6">
                     {/* Header Fields */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <div className="space-y-2">
-                            <Label>Cari Hesap</Label>
-                            <Select
-                                value={formData.partnerId}
-                                onValueChange={(val) => setFormData({ ...formData, partnerId: val })}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Cari seçin..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {partners.map(p => (
-                                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Fatura Tipi</Label>
-                            <Select
-                                value={formData.type}
-                                onValueChange={(val) => setFormData({ ...formData, type: val })}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Satış Faturası">Satış Faturası</SelectItem>
-                                    <SelectItem value="Alış Faturası">Alış Faturası</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Fatura Tarihi</Label>
-                            <Input
-                                type="date"
-                                value={formData.date}
-                                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Vade Tarihi</Label>
-                            <Input
-                                type="date"
-                                value={formData.dueDate}
-                                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                            />
-                        </div>
-                        <div className="space-y-2 md:col-span-4">
-                            <Label>Notlar</Label>
-                            <Input
-                                placeholder="Fatura notu..."
-                                value={formData.notes}
-                                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                            />
+                    {/* Header Fields */}
+                    <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-6 mb-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-x-8 gap-y-6">
+                            <div className="space-y-2">
+                                <Label className="mb-2 block text-sm font-medium text-slate-500">Cari Hesap</Label>
+                                <Select
+                                    value={formData.partnerId}
+                                    onValueChange={(val) => setFormData({ ...formData, partnerId: val })}
+                                >
+                                    <SelectTrigger className="h-11 w-full bg-white border-slate-200">
+                                        <SelectValue placeholder="Cari seçin..." />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {partners.map(p => (
+                                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="mb-2 block text-sm font-medium text-slate-500">Fatura Tipi</Label>
+                                <Select
+                                    value={formData.type}
+                                    onValueChange={(val) => setFormData({ ...formData, type: val })}
+                                >
+                                    <SelectTrigger className="h-11 w-full bg-white border-slate-200">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Satış Faturası">Satış Faturası</SelectItem>
+                                        <SelectItem value="Alış Faturası">Alış Faturası</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="mb-2 block text-sm font-medium text-slate-500">Fatura Tarihi</Label>
+                                <Input
+                                    type="date"
+                                    className="h-11 w-full bg-white border-slate-200"
+                                    value={formData.date}
+                                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="mb-2 block text-sm font-medium text-slate-500">Vade Tarihi</Label>
+                                <Input
+                                    type="date"
+                                    className="h-11 w-full bg-white border-slate-200"
+                                    value={formData.dueDate}
+                                    onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                                />
+                            </div>
                         </div>
                     </div>
 
+                    <div className="space-y-2 mb-6">
+                        <Label className="mb-2 block text-sm font-medium text-slate-500">Notlar</Label>
+                        <Input
+                            placeholder="Fatura notu..."
+                            className="h-11 w-full border-slate-200"
+                            value={formData.notes}
+                            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        />
+                    </div>
+
                     {/* Items Table */}
-                    <div className="bg-white border rounded-lg p-4">
-                        {/* Header Row */}
-                        <div className="grid grid-cols-12 gap-3 mb-2 text-sm font-medium text-gray-500">
-                            <div className="col-span-3">Ürün / Hizmet</div>
-                            <div className="col-span-2">Kod</div>
-                            <div className="col-span-1">Miktar</div>
-                            <div className="col-span-1">Birim</div>
-                            <div className="col-span-2">Birim Fiyat</div>
-                            <div className="col-span-1">KDV %</div>
-                            <div className="col-span-1 text-right">Toplam</div>
-                            <div className="col-span-1"></div>
-                        </div>
+                    {/* Items List */}
+                    <div className="space-y-4">
+                        {items.map((item, index) => {
+                            const lineTotal = item.quantity * item.price;
+                            const lineTax = lineTotal * (item.taxRate / 100);
+                            const total = lineTotal + lineTax;
 
-                        {/* Rows */}
-                        <div className="space-y-2">
-                            {items.map((item, index) => {
-                                const lineTotal = item.quantity * item.price;
-                                const lineTax = lineTotal * (item.taxRate / 100);
-                                const total = lineTotal + lineTax;
+                            return (
+                                <div key={index} className="relative border border-slate-200 rounded-2xl p-5 bg-slate-50/50 mb-4">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="absolute top-4 right-4 text-red-500 hover:bg-red-100 rounded-full h-8 w-8"
+                                        onClick={() => handleRemoveItem(index)}
+                                        disabled={items.length === 1}
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </Button>
 
-                                return (
-                                    <div key={index} className="grid grid-cols-12 gap-3 items-center">
-                                        <div className="col-span-3">
+                                    <div className="space-y-4">
+                                        <div className="space-y-2 pr-12">
+                                            <Label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Ürün / Hizmet</Label>
                                             <Select
                                                 value={item.productId}
                                                 onValueChange={(val) => handleItemChange(index, "productId", val)}
                                             >
-                                                <SelectTrigger className="h-10 w-full min-w-0 border-slate-200">
-                                                    <SelectValue placeholder="Ürün seç..." />
+                                                <SelectTrigger className="h-11 rounded-xl border-slate-200 bg-white">
+                                                    <SelectValue placeholder="Ürün seçin..." />
                                                 </SelectTrigger>
                                                 <SelectContent>
                                                     {products.map(p => (
                                                         <SelectItem key={p.id} value={p.id}>
-                                                            {p.name}
+                                                            {p.name} ({p.code})
                                                         </SelectItem>
                                                     ))}
                                                 </SelectContent>
                                             </Select>
                                         </div>
-                                        <div className="col-span-2">
-                                            <Input
-                                                className="h-10 w-full min-w-0 bg-slate-50 text-xs"
-                                                readOnly
-                                                value={item.code || '-'}
-                                                placeholder="Kod"
-                                            />
-                                        </div>
-                                        <div className="col-span-1">
-                                            <Input
-                                                type="number"
-                                                min="1"
-                                                className="h-10 w-full min-w-0"
-                                                value={item.quantity}
-                                                onChange={(e) => handleItemChange(index, "quantity", Number(e.target.value))}
-                                            />
-                                        </div>
-                                        <div className="col-span-1">
-                                            <Input
-                                                className="h-10 w-full min-w-0"
-                                                value={item.unit}
-                                                onChange={(e) => handleItemChange(index, "unit", e.target.value)}
-                                                placeholder="Birim"
-                                            />
-                                        </div>
-                                        <div className="col-span-2">
-                                            <Input
-                                                type="number"
-                                                min="0"
-                                                step="0.01"
-                                                className="h-10 w-full min-w-0"
-                                                value={item.price}
-                                                onChange={(e) => handleItemChange(index, "price", Number(e.target.value))}
-                                            />
-                                        </div>
-                                        <div className="col-span-1">
-                                            <Input
-                                                type="number"
-                                                min="0"
-                                                max="100"
-                                                className="h-10 w-full min-w-0"
-                                                value={item.taxRate}
-                                                onChange={(e) => handleItemChange(index, "taxRate", Number(e.target.value))}
-                                            />
-                                        </div>
-                                        <div className="col-span-1 text-right font-medium text-sm">
-                                            {total.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
-                                        </div>
-                                        <div className="col-span-1 flex justify-end">
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-10 w-10 text-red-500 hover:bg-red-50"
-                                                onClick={() => handleRemoveItem(index)}
-                                                disabled={items.length === 1}
-                                            >
-                                                <Trash2 className="w-5 h-5" />
-                                            </Button>
+
+                                        <div className="grid grid-cols-12 gap-4">
+                                            <div className="col-span-2 space-y-2">
+                                                <Label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Miktar</Label>
+                                                <Input
+                                                    type="number"
+                                                    min="1"
+                                                    className="h-11 rounded-xl border-slate-200 bg-white"
+                                                    value={item.quantity}
+                                                    onChange={(e) => handleItemChange(index, "quantity", Number(e.target.value))}
+                                                />
+                                            </div>
+                                            <div className="col-span-2 space-y-2">
+                                                <Label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Birim</Label>
+                                                <Input
+                                                    className="h-11 rounded-xl border-slate-200 bg-white"
+                                                    value={item.unit}
+                                                    onChange={(e) => handleItemChange(index, "unit", e.target.value)}
+                                                    placeholder="Adet"
+                                                />
+                                            </div>
+                                            <div className="col-span-3 space-y-2">
+                                                <Label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Birim Fiyat</Label>
+                                                <Input
+                                                    type="number"
+                                                    min="0"
+                                                    step="0.01"
+                                                    className="h-11 rounded-xl border-slate-200 bg-white"
+                                                    value={item.price}
+                                                    onChange={(e) => handleItemChange(index, "price", Number(e.target.value))}
+                                                />
+                                            </div>
+                                            <div className="col-span-2 space-y-2">
+                                                <Label className="text-xs font-medium text-slate-500 uppercase tracking-wider">KDV %</Label>
+                                                <Input
+                                                    type="number"
+                                                    min="0"
+                                                    max="100"
+                                                    className="h-11 rounded-xl border-slate-200 bg-white"
+                                                    value={item.taxRate}
+                                                    onChange={(e) => handleItemChange(index, "taxRate", Number(e.target.value))}
+                                                />
+                                            </div>
+                                            <div className="col-span-3 space-y-2">
+                                                <Label className="text-xs font-medium text-slate-500 uppercase tracking-wider">Satır Toplamı</Label>
+                                                <Input
+                                                    readOnly
+                                                    className="h-11 rounded-xl border-slate-200 bg-slate-100 font-bold text-slate-900"
+                                                    value={`${total.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺`}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
-                                );
-                            })}
-                        </div>
+                                </div>
+                            );
+                        })}
 
-                        <div className="p-3 bg-slate-50 border-t">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleAddItem}
-                                className="gap-2 text-blue-600 hover:text-blue-700 h-9"
-                            >
-                                <Plus className="w-4 h-4" />
-                                Satır Ekle
-                            </Button>
-                        </div>
+                        <Button
+                            variant="outline"
+                            onClick={handleAddItem}
+                            className="w-full py-6 border-dashed border-2 border-slate-200 hover:border-blue-500 hover:bg-blue-50 text-slate-500 hover:text-blue-600 rounded-xl gap-2 h-auto transition-colors"
+                        >
+                            <Plus className="w-5 h-5" />
+                            Yeni Satır Ekle
+                        </Button>
                     </div>
 
                     {/* Totals Summary */}

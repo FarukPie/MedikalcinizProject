@@ -60,8 +60,8 @@ export function StockDialog({ products }: StockDialogProps) {
                     Stok Ekle/Çıkar
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px] p-0 gap-0 overflow-hidden">
-                <DialogHeader className="px-6 py-4 border-b bg-white">
+            <DialogContent className="sm:max-w-[425px] p-0 gap-0 overflow-hidden sm:rounded-2xl">
+                <DialogHeader className="px-8 py-4 border-b bg-white">
                     <DialogTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
                         <ArrowRightLeft className="w-5 h-5 text-blue-600" />
                         Stok Hareketi
@@ -69,11 +69,11 @@ export function StockDialog({ products }: StockDialogProps) {
                 </DialogHeader>
 
                 <form action={formAction}>
-                    <div className="p-6 grid gap-4">
+                    <div className="p-8 grid gap-6">
                         <div className="space-y-2">
                             <Label htmlFor="product" className="text-sm font-medium text-slate-700">Ürün Seçin</Label>
                             <Select name="productId" required onValueChange={setSelectedProduct}>
-                                <SelectTrigger className="rounded-lg border-slate-200">
+                                <SelectTrigger className="rounded-xl border-slate-200 h-11 shadow-sm focus:border-blue-500 transition-colors">
                                     <SelectValue placeholder="Ürün arayın veya seçin..." />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -90,7 +90,7 @@ export function StockDialog({ products }: StockDialogProps) {
                             <div className="space-y-2">
                                 <Label className="text-sm font-medium text-slate-700">İşlem Tipi</Label>
                                 <Select name="type" value={transactionType} onValueChange={setTransactionType}>
-                                    <SelectTrigger className="rounded-lg border-slate-200">
+                                    <SelectTrigger className="rounded-xl border-slate-200 h-11 shadow-sm focus:border-blue-500 transition-colors">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -108,18 +108,18 @@ export function StockDialog({ products }: StockDialogProps) {
                                     min="1"
                                     required
                                     placeholder="0"
-                                    className="rounded-lg border-slate-200"
+                                    className="rounded-xl border-slate-200 h-11 shadow-sm focus:border-blue-500 transition-colors"
                                 />
                             </div>
                         </div>
 
                         <div className="space-y-2">
                             <Label htmlFor="note" className="text-sm font-medium text-slate-700">Açıklama / Not</Label>
-                            <Input id="note" name="description" placeholder="İşlem nedeni..." className="rounded-lg border-slate-200" />
+                            <Input id="note" name="description" placeholder="İşlem nedeni..." className="rounded-xl border-slate-200 h-11 shadow-sm focus:border-blue-500 transition-colors" />
                         </div>
                     </div>
 
-                    <DialogFooter className="px-6 py-4 border-t bg-gray-50 flex flex-row justify-end gap-2">
+                    <DialogFooter className="px-8 py-4 border-t bg-gray-50 flex flex-row justify-end gap-2 sm:rounded-b-2xl">
                         <DialogClose asChild>
                             <Button variant="outline" type="button" className="rounded-lg border-slate-200 hover:bg-slate-50">İptal</Button>
                         </DialogClose>

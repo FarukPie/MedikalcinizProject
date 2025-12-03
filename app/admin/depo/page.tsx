@@ -31,6 +31,32 @@ import { getWarehousesWithStats, deleteWarehouse } from "@/lib/actions/warehouse
 import { WarehouseDeleteButton } from "@/components/admin/warehouse-delete-button";
 import { toast } from "sonner";
 
+interface WarehouseProduct {
+    id: string;
+    code: string;
+    name: string;
+    stock: number;
+    minStock: number;
+    unit: string;
+    sellPrice: number;
+    category?: {
+        name: string;
+    } | null;
+}
+
+interface WarehouseWithStats {
+    id: string;
+    name: string;
+    description: string | null;
+    shelfCount: number;
+    rowCount: number;
+    totalProducts: number;
+    totalStock: number;
+    products: WarehouseProduct[];
+    createdAt: Date;
+    updatedAt: Date;
+}
+
 export default async function WarehousePage() {
     const warehouses = await getWarehousesWithStats();
 
@@ -49,7 +75,7 @@ export default async function WarehousePage() {
             {warehouses.length > 0 ? (
                 <Tabs defaultValue={warehouses[0]?.id} className="w-full space-y-6">
                     <TabsList className="w-full justify-start h-auto p-1 bg-slate-100/50 rounded-xl overflow-x-auto">
-                        {warehouses.map((warehouse) => (
+                        {warehouses.map((warehouse: WarehouseWithStats) => (
                             <TabsTrigger
                                 key={warehouse.id}
                                 value={warehouse.id}
@@ -60,7 +86,7 @@ export default async function WarehousePage() {
                         ))}
                     </TabsList>
 
-                    {warehouses.map((warehouse) => (
+                    {warehouses.map((warehouse: WarehouseWithStats) => (
                         <TabsContent key={warehouse.id} value={warehouse.id} className="space-y-6 mt-0">
                             {/* Info Card */}
                             <Card className="border-slate-200 shadow-sm">

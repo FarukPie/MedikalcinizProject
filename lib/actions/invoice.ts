@@ -15,7 +15,7 @@ export async function getInvoices() {
                 }
             },
             orderBy: {
-                createdAt: 'desc'
+                date: 'desc'
             }
         });
 
@@ -160,6 +160,23 @@ export async function createInvoice(data: any) {
                     where: { id: partnerId },
                     data: { balance: { decrement: totalAmount } }
                 });
+            }
+
+            // 4. Update Stock
+            for (const item of processedItems) {
+                if (item.productId) {
+                    if (isSales) {
+                        await tx.product.update({
+                            where: { id: item.productId },
+                            data: { stock: { decrement: item.quantity } }
+                        });
+                    } else {
+                        await tx.product.update({
+                            where: { id: item.productId },
+                            data: { stock: { increment: item.quantity } }
+                        });
+                    }
+                }
             }
         });
 

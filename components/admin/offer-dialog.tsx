@@ -212,49 +212,52 @@ export function OfferDialog({ partners = [], products = [] }: OfferDialogProps) 
                 <div className="flex-1 overflow-y-auto px-6 py-6 bg-slate-50/50">
                     <div className="space-y-6">
                         {/* Header Info */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
-                            <div className="space-y-2">
-                                <Label className="text-xs font-semibold text-slate-500 uppercase">Teklif Tipi</Label>
-                                <Select value={offerType} onValueChange={setOfferType}>
-                                    <SelectTrigger className="bg-slate-50 border-slate-200">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Satış Teklifi">Satış Teklifi</SelectItem>
-                                        <SelectItem value="Satın Alma Teklifi">Satın Alma Teklifi</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-xs font-semibold text-slate-500 uppercase">Cari Hesap</Label>
-                                <Select value={partnerId} onValueChange={setPartnerId}>
-                                    <SelectTrigger className="bg-slate-50 border-slate-200">
-                                        <SelectValue placeholder="Cari seçiniz..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {partners.map(p => (
-                                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-xs font-semibold text-slate-500 uppercase">Teklif Tarihi</Label>
-                                <Input
-                                    type="date"
-                                    value={offerDate}
-                                    onChange={(e) => setOfferDate(e.target.value)}
-                                    className="bg-slate-50 border-slate-200"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label className="text-xs font-semibold text-slate-500 uppercase">Geçerlilik Tarihi</Label>
-                                <Input
-                                    type="date"
-                                    value={validUntil}
-                                    onChange={(e) => setValidUntil(e.target.value)}
-                                    className="bg-slate-50 border-slate-200"
-                                />
+                        {/* Header Info */}
+                        <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-6 mb-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-x-8 gap-y-6">
+                                <div className="space-y-2">
+                                    <Label className="mb-2 block text-sm font-medium text-slate-500">Cari Hesap</Label>
+                                    <Select value={partnerId} onValueChange={setPartnerId}>
+                                        <SelectTrigger className="h-11 w-full bg-white border-slate-200">
+                                            <SelectValue placeholder="Cari seçiniz..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {partners.map(p => (
+                                                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="mb-2 block text-sm font-medium text-slate-500">Teklif Tipi</Label>
+                                    <Select value={offerType} onValueChange={setOfferType}>
+                                        <SelectTrigger className="h-11 w-full bg-white border-slate-200">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Satış Teklifi">Satış Teklifi</SelectItem>
+                                            <SelectItem value="Satın Alma Teklifi">Satın Alma Teklifi</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="mb-2 block text-sm font-medium text-slate-500">Teklif Tarihi</Label>
+                                    <Input
+                                        type="date"
+                                        value={offerDate}
+                                        onChange={(e) => setOfferDate(e.target.value)}
+                                        className="h-11 w-full bg-white border-slate-200"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label className="mb-2 block text-sm font-medium text-slate-500">Geçerlilik Tarihi</Label>
+                                    <Input
+                                        type="date"
+                                        value={validUntil}
+                                        onChange={(e) => setValidUntil(e.target.value)}
+                                        className="h-11 w-full bg-white border-slate-200"
+                                    />
+                                </div>
                             </div>
                         </div>
 

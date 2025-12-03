@@ -22,9 +22,16 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { createPartner, updatePartner } from "@/lib/actions/partner";
 import { toast } from "sonner";
+import { useEffect } from "react";
+import { Edit2 } from "lucide-react";
 
-export function CariDialog() {
+interface CariDialogProps {
+    partner?: any;
+}
+
+export function CariDialog({ partner }: CariDialogProps) {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -38,21 +45,23 @@ export function CariDialog() {
     const [address, setAddress] = useState("");
     const [description, setDescription] = useState("");
 
-    const handleSubmit = async () => {
-        if (!name) {
-            toast.error("Lütfen cari adını giriniz.");
-            return;
-        }
+    useEffect(() => {
+        if (partner && isDialogOpen) {
+            setName(partner.name);
+            // Map Enum to string value
+            let typeVal = "musteri";
+            if (partner.type === "SUPPLIER") typeVal = "tedarikci";
+            if (partner.type === "BOTH") typeVal = "hepsi";
+            setType(typeVal);
 
-        setIsLoading(true);
-        try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            toast.success("Cari başarıyla oluşturuldu.");
-            setIsDialogOpen(false);
-
-            // Reset form
+            setVkn(partner.taxNumber || "");
+            setContactName(partner.contactName || "");
+            setContactPhone(partner.phone || "");
+            setContactEmail(partner.email || "");
+            setAddress(partner.address || "");
+            // description is not in schema yet, ignoring
+        } else if (!partner && isDialogOpen) {
+            // Reset if opening as new
             setName("");
             setType("musteri");
             setVkn("");
@@ -61,6 +70,58 @@ export function CariDialog() {
             setContactEmail("");
             setAddress("");
             setDescription("");
+        }
+    }, [partner, isDialogOpen]);
+
+    const handleSubmit = async () => {
+        if (!name) {
+            toast.error("Lütfen cari adını giriniz.");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            let result;
+
+            if (partner) {
+                result = await updatePartner(partner.id, {
+                    name,
+                    type,
+                    vkn,
+                    contactName,
+                    phone: contactPhone,
+                    email: contactEmail,
+                    address
+                });
+            } else {
+                result = await createPartner({
+                    name,
+                    type,
+                    vkn,
+                    contactName,
+                    phone: contactPhone,
+                    email: contactEmail,
+                    address,
+                    description
+                });
+            }
+
+            if (result.success) {
+                toast.success(result.message);
+                setIsDialogOpen(false);
+
+                // Reset form
+                setName("");
+                setType("musteri");
+                setVkn("");
+                setContactName("");
+                setContactPhone("");
+                setContactEmail("");
+                setAddress("");
+                setDescription("");
+            } else {
+                toast.error(result.error);
+            }
         } catch (error) {
             toast.error("Beklenmedik bir hata oluştu.");
         } finally {
@@ -71,10 +132,16 @@ export function CariDialog() {
     return (
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-                <Button suppressHydrationWarning className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20">
-                    <Plus className="w-4 h-4" />
-                    Cari Ekle
-                </Button>
+                {partner ? (
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-slate-900 hover:bg-slate-100">
+                        <Edit2 className="w-4 h-4" />
+                    </Button>
+                ) : (
+                    <Button suppressHydrationWarning className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20">
+                        <Plus className="w-4 h-4" />
+                        Cari Ekle
+                    </Button>
+                )}
             </DialogTrigger>
             <DialogContent className="flex flex-col max-h-[90vh] sm:max-w-3xl p-0 overflow-hidden gap-0">
                 {/* Fixed Header */}
@@ -83,7 +150,9 @@ export function CariDialog() {
                         <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
                             <Users className="w-4 h-4" />
                         </div>
-                        <DialogTitle className="text-xl font-bold text-slate-900">Yeni Cari Ekle</DialogTitle>
+                        <DialogTitle className="text-xl font-bold text-slate-900">
+                            {partner ? "Cari Düzenle" : "Yeni Cari Ekle"}
+                        </DialogTitle>
                     </div>
                 </DialogHeader>
 
