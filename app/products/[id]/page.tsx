@@ -32,10 +32,21 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         .filter((p: any) => p.id !== product.id)
         .slice(0, 4);
 
+    // Convert Decimal to number for serialization
+    const serializedProduct = {
+        ...product,
+        price: Number(product.price)
+    };
+
+    const serializedSimilarProducts = filteredSimilarProducts.map((p: any) => ({
+        ...p,
+        price: Number(p.price)
+    }));
+
     return (
         <div className="min-h-screen bg-slate-50/50 font-sans selection:bg-blue-100 selection:text-blue-900">
             <Navbar />
-            <ProductDetailView product={product} similarProducts={filteredSimilarProducts} />
+            <ProductDetailView product={serializedProduct} similarProducts={serializedSimilarProducts} />
         </div>
     );
 }

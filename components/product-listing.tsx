@@ -16,7 +16,7 @@ import { useState, useEffect } from "react";
 import { Product, Category } from "@prisma/client";
 
 interface ProductListingProps {
-    initialProducts: (Product & { category: Category; images: string[] })[];
+    initialProducts: (Omit<Product, "price"> & { price: number; category: Category | null })[];
     categories: Category[];
 }
 
@@ -167,7 +167,7 @@ export function ProductListing({ initialProducts, categories }: ProductListingPr
                     <div className="md:hidden">
                         <Sheet>
                             <SheetTrigger asChild>
-                                <Button variant="outline" className="w-full">
+                                <Button suppressHydrationWarning variant="outline" className="w-full">
                                     <Filter className="mr-2 h-4 w-4" /> Filtrele
                                 </Button>
                             </SheetTrigger>
@@ -227,9 +227,9 @@ export function ProductListing({ initialProducts, categories }: ProductListingPr
                                     id={product.id}
                                     category={product.category?.name || 'Genel'}
                                     title={product.name}
-                                    code={product.sku}
+                                    code={product.code}
                                     price={Number(product.price as any)}
-                                    image={product.images[0]}
+                                    image={product.image || undefined}
                                 />
                             ))}
                         </div>

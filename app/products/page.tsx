@@ -13,9 +13,15 @@ export default async function ProductsPage({
         getAllCategories(),
     ]);
 
+    // Convert Decimal to number for serialization
+    const serializedProducts = products.map(product => ({
+        ...product,
+        price: Number(product.price)
+    }));
+
     return (
         <Suspense fallback={<div>Yükleniyor...</div>}>
-            <ProductListing initialProducts={products} categories={categories} />
+            <ProductListing initialProducts={serializedProducts} categories={categories} />
         </Suspense>
     );
 }

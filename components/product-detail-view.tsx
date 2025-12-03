@@ -20,9 +20,11 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { ProductCard } from "@/components/product-card";
 
+import { Product, Category } from "@prisma/client";
+
 interface ProductDetailViewProps {
-    product: any; // We'll fix the type later or let it be inferred
-    similarProducts: any[];
+    product: Omit<Product, "price"> & { price: number; category: Category | null };
+    similarProducts: (Omit<Product, "price"> & { price: number; category: Category | null })[];
 }
 
 export function ProductDetailView({ product, similarProducts }: ProductDetailViewProps) {
@@ -38,15 +40,18 @@ export function ProductDetailView({ product, similarProducts }: ProductDetailVie
     const isFavorite = mounted ? favoriteItems.some((item) => item.id === product.id) : false;
     const priceWithVat = Number(product.price) * 1.20;
 
-    // Handle image array vs string
-    const mainImage = Array.isArray(product.images) && product.images.length > 0 ? product.images[0] : product.image;
+    // Handle image
+    const mainImage = product.image;
 
     const handleAddToCart = () => {
         for (let i = 0; i < quantity; i++) {
             addToCart({
-                ...product,
-                image: mainImage, // Ensure store gets a string image
-                price: Number(product.price)
+                id: product.id,
+                title: product.name,
+                code: product.code,
+                price: Number(product.price),
+                image: mainImage || undefined,
+                category: product.category?.name || 'Genel'
             });
         }
         toast.custom((t) => (
@@ -129,7 +134,7 @@ export function ProductDetailView({ product, similarProducts }: ProductDetailVie
                             {product.name}
                         </h1>
                         <p className="text-slate-500 font-mono text-sm bg-slate-100 w-fit px-3 py-1 rounded-lg">
-                            Ürün Kodu: <span className="text-slate-700 font-semibold">{product.sku}</span>
+                            Ürün Kodu: <span className="text-slate-700 font-semibold">{product.code}</span>
                         </p>
                         <p className="mt-4 text-slate-600 leading-relaxed">
                             {product.description}
@@ -188,7 +193,14 @@ export function ProductDetailView({ product, similarProducts }: ProductDetailVie
                                 <Button
                                     variant="outline"
                                     className={`h-14 w-14 shrink-0 border-2 rounded-2xl transition-all ${isFavorite ? 'text-red-500 border-red-100 bg-red-50' : 'text-slate-400 border-slate-200 hover:text-red-500 hover:border-red-100 hover:bg-red-50'}`}
-                                    onClick={() => toggleFavorite({ ...product, image: mainImage, price: Number(product.price) })}
+                                    onClick={() => toggleFavorite({
+                                        id: product.id,
+                                        title: product.name,
+                                        code: product.code,
+                                        price: Number(product.price),
+                                        image: mainImage || undefined,
+                                        category: product.category?.name || 'Genel'
+                                    })}
                                 >
                                     <Heart className={`w-6 h-6 ${isFavorite ? 'fill-current' : ''}`} />
                                 </Button>
@@ -236,9 +248,9 @@ export function ProductDetailView({ product, similarProducts }: ProductDetailVie
                                 id={p.id}
                                 category={p.category?.name || 'Genel'}
                                 title={p.name}
-                                code={p.sku}
+                                code={p.code}
                                 price={Number(p.price)}
-                                image={Array.isArray(p.images) ? p.images[0] : p.image}
+                                image={p.image || undefined}
                             />
                         ))}
                     </div>

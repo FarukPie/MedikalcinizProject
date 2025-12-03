@@ -123,7 +123,7 @@ export default async function Home() {
                 <Truck className="w-8 h-8" />
               </div>
               <h3 className="font-bold text-slate-900 text-lg mb-3">Hızlı Teslimat</h3>
-              <p className="text-slate-500 text-sm leading-relaxed">İzmir içi aynı gün, tüm Türkiye'ye ertesi gün kargo imkanı.</p>
+              <p className="text-slate-500 text-sm leading-relaxed">İzmir içi aynı gün, tüm Türkiye&apos;ye ertesi gün kargo imkanı.</p>
             </div>
 
             <div className="bg-white p-8 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100 text-center hover:-translate-y-2 transition-all duration-300 group">
@@ -214,11 +214,11 @@ export default async function Home() {
               <ProductCard
                 key={product.id}
                 id={product.id}
-                category={product.category.name}
+                category={product.category?.name || "Genel"}
                 title={product.name}
-                code={product.sku}
+                code={product.code}
                 price={Number(product.price)}
-                image={product.images[0]}
+                image={product.image || ""}
               />
             ))}
           </div>

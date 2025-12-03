@@ -2,10 +2,12 @@
 
 import { usePathname } from "next/navigation";
 
-export function FooterWrapper({ children }: { children: React.ReactNode }) {
+import { ReactNode } from "react";
+
+export function FooterWrapper({ children }: { children: ReactNode }) {
     const pathname = usePathname();
 
-    if (pathname === "/login" || pathname === "/register") {
+    if (pathname === "/login" || pathname === "/register" || pathname?.startsWith("/admin")) {
         return null;
     }
 
