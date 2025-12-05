@@ -100,6 +100,92 @@ export async function getFeaturedProducts(): Promise<(Omit<Product, 'buyPrice' |
     }
 }
 
+export async function getLatestProducts(): Promise<(Omit<Product, 'buyPrice' | 'sellPrice'> & { buyPrice: number, sellPrice: number, price: number, category: Category | null })[]> {
+    try {
+        const products = await prisma.product.findMany({
+            where: {
+                isActive: true,
+            },
+            take: 8,
+            include: {
+                category: true,
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+        })
+        return products.map((product: Product & { category: Category | null }) => ({
+            ...product,
+            buyPrice: Number(product.buyPrice),
+            sellPrice: Number(product.sellPrice),
+            price: Number(product.sellPrice)
+        }))
+    } catch (error) {
+        console.error('Error fetching latest products:', error)
+        return []
+    }
+}
+
+export async function getBestSellingProducts(): Promise<(Omit<Product, 'buyPrice' | 'sellPrice'> & { buyPrice: number, sellPrice: number, price: number, category: Category | null })[]> {
+    try {
+        // Group by productId and sum quantity
+        const topSellingItems = await prisma.orderItem.groupBy({
+            by: ['productId'],
+            _sum: {
+                quantity: true,
+            },
+            orderBy: {
+                _sum: {
+                    quantity: 'desc',
+                },
+            },
+            take: 4,
+            where: {
+                productId: {
+                    not: null
+                }
+            }
+        });
+
+        // Get product IDs
+        const productIds = topSellingItems
+            .map(item => item.productId)
+            .filter((id): id is string => id !== null);
+
+        if (productIds.length === 0) {
+            return [];
+        }
+
+        // Fetch product details
+        const products = await prisma.product.findMany({
+            where: {
+                id: {
+                    in: productIds,
+                },
+                isActive: true,
+            },
+            include: {
+                category: true,
+            },
+        });
+
+        // Sort products to match the order of topSellingItems
+        const sortedProducts = productIds
+            .map(id => products.find(p => p.id === id))
+            .filter((p): p is (Product & { category: Category | null }) => p !== undefined);
+
+        return sortedProducts.map((product) => ({
+            ...product,
+            buyPrice: Number(product.buyPrice),
+            sellPrice: Number(product.sellPrice),
+            price: Number(product.sellPrice)
+        }));
+    } catch (error) {
+        console.error('Error fetching best selling products:', error);
+        return [];
+    }
+}
+
 export async function getAllCategories(): Promise<Category[]> {
     try {
         const categories = await prisma.category.findMany({

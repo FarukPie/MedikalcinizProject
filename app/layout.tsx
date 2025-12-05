@@ -16,6 +16,8 @@ export const metadata: Metadata = {
 import { Footer } from "@/components/footer";
 import { FooterWrapper } from "@/components/footer-wrapper";
 
+import { Providers } from "@/components/providers";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,11 +28,13 @@ export default function RootLayout({
       <body
         className={`${plusJakartaSans.variable} font-sans antialiased bg-slate-50`}
       >
-        {children}
-        <FooterWrapper>
-          <Footer />
-        </FooterWrapper>
-        <Toaster />
+        <Providers>
+          {children}
+          <FooterWrapper>
+            <Footer />
+          </FooterWrapper>
+          <Toaster />
+        </Providers>
       </body>
     </html>
   );

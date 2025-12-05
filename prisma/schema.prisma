@@ -369,3 +369,16 @@ model CartItem {
   @@unique([cartId, productId])
   @@map("cart_items")
 }
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  firstName String
+  lastName  String
+  email     String
+  subject   String?
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("contact_messages")
+}

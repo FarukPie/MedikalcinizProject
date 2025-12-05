@@ -1,19 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { Eye, EyeOff, Lock, Mail, Phone, User, ArrowRight, CheckCircle2 } from "lucide-react";
+import { useState, useEffect, useActionState } from "react";
+import { Eye, EyeOff, Lock, Mail, Phone, User, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
+import { registerUser } from "@/lib/actions/auth";
+import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
     const [passwordsMatch, setPasswordsMatch] = useState(true);
+    const router = useRouter();
+
+    const [state, formAction, isPending] = useActionState(registerUser, {
+        success: false,
+        message: ""
+    });
 
     const [formData, setFormData] = useState({
         firstName: "",
@@ -24,6 +31,26 @@ export default function RegisterPage() {
         confirmPassword: ""
     });
 
+    // Password Validation State
+    const [passwordCriteria, setPasswordCriteria] = useState({
+        length: false,
+        uppercase: false,
+        lowercase: false,
+        number: false
+    });
+
+    useEffect(() => {
+        const password = formData.password;
+        setPasswordCriteria({
+            length: password.length >= 6,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /[0-9]/.test(password)
+        });
+    }, [formData.password]);
+
+    const isPasswordValid = Object.values(passwordCriteria).every(Boolean);
+
     useEffect(() => {
         if (formData.confirmPassword) {
             setPasswordsMatch(formData.password === formData.confirmPassword);
@@ -32,31 +59,18 @@ export default function RegisterPage() {
         }
     }, [formData.password, formData.confirmPassword]);
 
+    useEffect(() => {
+        if (state.success) {
+            toast.success(state.message);
+            router.push("/login");
+        } else if (state.message) {
+            toast.error(state.message);
+        }
+    }, [state, router]);
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { id, value } = e.target;
         setFormData(prev => ({ ...prev, [id]: value }));
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (formData.password !== formData.confirmPassword) {
-            setPasswordsMatch(false);
-            return;
-        }
-
-        setIsLoading(true);
-
-        // Simulate API call
-        console.log("Registration Data:", formData);
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        toast.success("Kayıt başarıyla oluşturuldu!", {
-            description: "Giriş sayfasına yönlendiriliyorsunuz...",
-            duration: 3000,
-        });
-
-        setIsLoading(false);
     };
 
     return (
@@ -83,7 +97,7 @@ export default function RegisterPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    <form action={formAction} className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="firstName" className="text-slate-700 font-medium">Ad</Label>
@@ -93,6 +107,7 @@ export default function RegisterPage() {
                                     </div>
                                     <Input
                                         id="firstName"
+                                        name="firstName"
                                         placeholder="Ahmet"
                                         className="pl-9 h-11 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:border-primary/30 focus:ring-4 focus:ring-primary/10 transition-all duration-300"
                                         required
@@ -109,6 +124,7 @@ export default function RegisterPage() {
                                     </div>
                                     <Input
                                         id="lastName"
+                                        name="lastName"
                                         placeholder="Yılmaz"
                                         className="pl-9 h-11 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:border-primary/30 focus:ring-4 focus:ring-primary/10 transition-all duration-300"
                                         required
@@ -127,6 +143,7 @@ export default function RegisterPage() {
                                 </div>
                                 <Input
                                     id="phone"
+                                    name="phone"
                                     type="tel"
                                     placeholder="05XX XXX XX XX"
                                     className="pl-9 h-11 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:border-primary/30 focus:ring-4 focus:ring-primary/10 transition-all duration-300"
@@ -145,6 +162,7 @@ export default function RegisterPage() {
                                 </div>
                                 <Input
                                     id="email"
+                                    name="email"
                                     type="email"
                                     placeholder="ornek@sirket.com"
                                     className="pl-9 h-11 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:border-primary/30 focus:ring-4 focus:ring-primary/10 transition-all duration-300"
@@ -163,6 +181,7 @@ export default function RegisterPage() {
                                 </div>
                                 <Input
                                     id="password"
+                                    name="password"
                                     type={showPassword ? "text" : "password"}
                                     placeholder="••••••••"
                                     className="pl-9 pr-10 h-11 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:border-primary/30 focus:ring-4 focus:ring-primary/10 transition-all duration-300"
@@ -178,6 +197,14 @@ export default function RegisterPage() {
                                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </button>
                             </div>
+
+                            {/* Password Criteria Checklist */}
+                            <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                                <CriteriaItem valid={passwordCriteria.length} text="En az 6 karakter" />
+                                <CriteriaItem valid={passwordCriteria.uppercase} text="Büyük harf" />
+                                <CriteriaItem valid={passwordCriteria.lowercase} text="Küçük harf" />
+                                <CriteriaItem valid={passwordCriteria.number} text="Rakam" />
+                            </div>
                         </div>
 
                         <div className="space-y-2">
@@ -188,6 +215,7 @@ export default function RegisterPage() {
                                 </div>
                                 <Input
                                     id="confirmPassword"
+                                    name="confirmPassword"
                                     type={showConfirmPassword ? "text" : "password"}
                                     placeholder="••••••••"
                                     className={`pl-9 pr-10 h-11 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:border-primary/30 focus:ring-4 focus:ring-primary/10 transition-all duration-300 ${!passwordsMatch ? "border-red-500 focus:border-red-500 focus:ring-red-100" : ""}`}
@@ -212,10 +240,10 @@ export default function RegisterPage() {
 
                         <Button
                             type="submit"
-                            className="w-full h-12 bg-gradient-to-r from-primary to-blue-600 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 mt-4"
-                            disabled={isLoading || !passwordsMatch || !formData.password || !formData.confirmPassword}
+                            className="w-full h-12 bg-gradient-to-r from-primary to-blue-600 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={isPending || !passwordsMatch || !isPasswordValid || !formData.firstName || !formData.lastName || !formData.email || !formData.phone}
                         >
-                            {isLoading ? (
+                            {isPending ? (
                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                             ) : (
                                 <>
@@ -235,6 +263,15 @@ export default function RegisterPage() {
                     </p>
                 </CardFooter>
             </Card>
+        </div>
+    );
+}
+
+function CriteriaItem({ valid, text }: { valid: boolean; text: string }) {
+    return (
+        <div className={`flex items-center gap-1.5 ${valid ? "text-emerald-600" : "text-slate-400"}`}>
+            {valid ? <Check className="w-3.5 h-3.5" /> : <div className="w-3.5 h-3.5 rounded-full border border-slate-300" />}
+            <span>{text}</span>
         </div>
     );
 }

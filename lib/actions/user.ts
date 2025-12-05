@@ -56,12 +56,19 @@ export async function createUser(formData: FormData) {
         let assignedRoleId = null
         try {
             // Capitalize first letter for Role name search (e.g. "admin" -> "Admin")
-            const roleSearchName = roleName.charAt(0).toUpperCase() + roleName.slice(1)
+            // Default to 'Müşteri' if no role provided or found
+            const targetRoleName = roleName ? (roleName.charAt(0).toUpperCase() + roleName.slice(1)) : 'Müşteri';
+
             const roleRecord = await prisma.role.findUnique({
-                where: { name: roleSearchName }
+                where: { name: targetRoleName }
             })
+
             if (roleRecord) {
                 assignedRoleId = roleRecord.id
+            } else {
+                // Fallback to Müşteri if specific role not found (safety net)
+                const customerRole = await prisma.role.findUnique({ where: { name: 'Müşteri' } });
+                if (customerRole) assignedRoleId = customerRole.id;
             }
         } catch (e) {
             console.warn("Could not find role record for", roleName)

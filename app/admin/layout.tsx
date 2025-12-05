@@ -17,8 +17,10 @@ import {
     Menu,
     Bell,
     Search,
-    LogOut
+    LogOut,
+    Mail
 } from "lucide-react";
+import { signOut, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -27,27 +29,34 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
 const sidebarItems = [
-    { icon: LayoutDashboard, label: "Dashboard", href: "/admin" },
-    { icon: Users, label: "Kullanıcılar", href: "/admin/users" },
-    { icon: Shield, label: "Roller", href: "/admin/roles" },
-    { icon: Package, label: "Ürünler", href: "/admin/products" },
-    { icon: Warehouse, label: "Depo", href: "/admin/depo" },
-    { icon: FileText, label: "Teklif", href: "/admin/teklif" },
-    { icon: Truck, label: "İrsaliye", href: "/admin/irsaliye" },
-    { icon: Receipt, label: "Fatura", href: "/admin/fatura" },
-    { icon: Briefcase, label: "Cariler", href: "/admin/cariler" },
-    { icon: ShoppingCart, label: "Siparişlerim", href: "/admin/siparisler" },
-    { icon: CreditCard, label: "Ekstre", href: "/admin/ekstre" },
+    { icon: LayoutDashboard, label: "Dashboard", href: "/admin", roles: ["ADMIN", "CUSTOMER", "SALES"] },
+    { icon: Users, label: "Kullanıcılar", href: "/admin/users", roles: ["ADMIN"] },
+    { icon: Shield, label: "Roller", href: "/admin/roles", roles: ["ADMIN"] },
+    { icon: Package, label: "Ürünler", href: "/admin/products", roles: ["ADMIN", "SALES"] },
+    { icon: Warehouse, label: "Depo", href: "/admin/depo", roles: ["ADMIN", "SALES"] },
+    { icon: FileText, label: "Teklif", href: "/admin/teklif", roles: ["ADMIN", "SALES", "CUSTOMER"] },
+    { icon: Truck, label: "İrsaliye", href: "/admin/irsaliye", roles: ["ADMIN", "SALES"] },
+    { icon: Receipt, label: "Fatura", href: "/admin/fatura", roles: ["ADMIN", "SALES"] },
+    { icon: Briefcase, label: "Cariler", href: "/admin/cariler", roles: ["ADMIN", "SALES"] },
+    { icon: ShoppingCart, label: "Siparişlerim", href: "/admin/siparisler", roles: ["ADMIN", "SALES", "CUSTOMER"] },
+    { icon: CreditCard, label: "Ekstre", href: "/admin/ekstre", roles: ["ADMIN", "CUSTOMER"] },
+    { icon: Mail, label: "Mesajlar", href: "/admin/mesajlar", roles: ["ADMIN", "SALES"] },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const { data: session } = useSession();
+    const userRole = session?.user?.role as string || "CUSTOMER"; // Default to restricted if unknown
+
+    // Filter items based on role
+    const filteredItems = sidebarItems.filter(item => {
+        if (!item.roles) return true;
+        return item.roles.includes(userRole);
+    });
 
     return (
         <div className="min-h-screen bg-slate-50 flex font-sans">
@@ -63,7 +72,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </div>
 
                 <div className="flex-1 overflow-y-auto py-6 px-3 space-y-1 custom-scrollbar">
-                    {sidebarItems.map((item) => {
+                    {filteredItems.map((item) => {
                         const isActive = pathname === item.href;
                         return (
                             <Link key={item.href} href={item.href}>
@@ -89,8 +98,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             <AvatarFallback>AD</AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-white truncate">Admin User</p>
-                            <p className="text-xs text-slate-500 truncate">admin@medikal.com</p>
+                            <p className="text-sm font-medium text-white truncate">{session?.user?.name || "Kullanıcı"}</p>
+                            <p className="text-xs text-slate-500 truncate">{session?.user?.email || ""}</p>
                         </div>
                     </div>
                 </div>
@@ -117,7 +126,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                     </div>
                                 </div>
                                 <div className="flex-1 overflow-y-auto py-6 px-3 space-y-1">
-                                    {sidebarItems.map((item) => {
+                                    {filteredItems.map((item) => {
                                         const isActive = pathname === item.href;
                                         return (
                                             <Link key={item.href} href={item.href}>
@@ -160,16 +169,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                                         <AvatarImage src="https://github.com/shadcn.png" />
                                         <AvatarFallback>AD</AvatarFallback>
                                     </Avatar>
-                                    <span className="hidden md:block text-sm font-medium text-slate-700">Admin User</span>
+                                    <span className="hidden md:block text-sm font-medium text-slate-700">{session?.user?.name || "Kullanıcı"}</span>
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56">
-                                <DropdownMenuLabel>Hesabım</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem>Profil Ayarları</DropdownMenuItem>
-                                <DropdownMenuItem>Bildirimler</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50">
+                                <DropdownMenuItem
+                                    className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
+                                    onClick={() => signOut({ callbackUrl: "/login" })}
+                                >
                                     <LogOut className="w-4 h-4 mr-2" />
                                     Çıkış Yap
                                 </DropdownMenuItem>

@@ -7,8 +7,33 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Phone, Mail, MapPin } from "lucide-react";
+import { useFormStatus } from "react-dom";
+import { submitContactForm } from "@/lib/actions/contact";
+import { useActionState, useEffect } from "react";
+import { toast } from "sonner";
 
 export default function ContactPage() {
+    const [state, formAction] = useActionState(submitContactForm, {
+        success: false,
+        message: "",
+        errors: {}
+    });
+
+    const { pending } = useFormStatus();
+
+    useEffect(() => {
+        if (state.success) {
+            toast.success(state.message);
+            // Optional: Reset form here if needed, but native form reset happens on submission usually if not prevented.
+            // Actually with server actions, we might need to manually reset the form ref if we want to clear inputs.
+            // For now, let's just show the toast.
+            const form = document.getElementById("contact-form") as HTMLFormElement;
+            if (form) form.reset();
+        } else if (state.message && !state.success) {
+            toast.error(state.message);
+        }
+    }, [state]);
+
     return (
         <div className="min-h-screen bg-slate-50 font-sans">
             <Navbar />
@@ -75,41 +100,53 @@ export default function ContactPage() {
                         <CardContent className="p-8 space-y-6">
                             <h2 className="text-xl font-bold text-slate-900">Bize Ulaşın</h2>
 
-                            <div className="space-y-4">
+                            <form id="contact-form" action={formAction} className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="name">Adınız</Label>
-                                        <Input id="name" placeholder="Adınız" />
+                                        <Label htmlFor="firstName">Adınız</Label>
+                                        <Input id="firstName" name="firstName" placeholder="Adınız" required />
+                                        {state.errors?.firstName && <p className="text-sm text-red-500">{state.errors.firstName[0]}</p>}
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="surname">Soyadınız</Label>
-                                        <Input id="surname" placeholder="Soyadınız" />
+                                        <Label htmlFor="lastName">Soyadınız</Label>
+                                        <Input id="lastName" name="lastName" placeholder="Soyadınız" required />
+                                        {state.errors?.lastName && <p className="text-sm text-red-500">{state.errors.lastName[0]}</p>}
                                     </div>
                                 </div>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="email">E-posta Adresiniz</Label>
-                                    <Input id="email" type="email" placeholder="ornek@email.com" />
+                                    <Input id="email" name="email" type="email" placeholder="ornek@email.com" required />
+                                    {state.errors?.email && <p className="text-sm text-red-500">{state.errors.email[0]}</p>}
                                 </div>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="subject">Konu</Label>
-                                    <Input id="subject" placeholder="Mesajınızın konusu" />
+                                    <Input id="subject" name="subject" placeholder="Mesajınızın konusu" />
                                 </div>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="message">Mesajınız</Label>
-                                    <Textarea id="message" placeholder="Bize iletmek istediğiniz mesaj..." className="min-h-[120px]" />
+                                    <Textarea id="message" name="message" placeholder="Bize iletmek istediğiniz mesaj..." className="min-h-[120px]" required />
+                                    {state.errors?.message && <p className="text-sm text-red-500">{state.errors.message[0]}</p>}
                                 </div>
 
-                                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6">
-                                    Gönder
-                                </Button>
-                            </div>
+                                <SubmitButton />
+                            </form>
                         </CardContent>
                     </Card>
                 </div>
             </main>
         </div>
+    );
+}
+
+function SubmitButton() {
+    const { pending } = useFormStatus();
+
+    return (
+        <Button type="submit" disabled={pending} className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6">
+            {pending ? "Gönderiliyor..." : "Gönder"}
+        </Button>
     );
 }

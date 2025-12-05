@@ -3,11 +3,13 @@ import { Navbar } from "@/components/navbar";
 import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ShieldCheck, Truck, Headphones, PackageCheck, Activity, Syringe, Phone } from "lucide-react";
-import { getFeaturedProducts, getAllCategories } from "@/lib/actions/product";
+import { getLatestProducts, getBestSellingProducts, getAllCategories } from "@/lib/actions/product";
+import { HomeProductSection } from "@/components/home-product-section";
 
 export default async function Home() {
-  const [products, categoriesData] = await Promise.all([
-    getFeaturedProducts(),
+  const [products, bestSellingProducts, categoriesData] = await Promise.all([
+    getLatestProducts(),
+    getBestSellingProducts(),
     getAllCategories(),
   ]);
 
@@ -20,10 +22,11 @@ export default async function Home() {
     "İlk Yardım": { icon: Headphones, color: "bg-red-100 text-red-600", gradient: "from-red-500 to-red-600" },
   };
 
-  const categories = categoriesData.map((cat) => {
+  const categories = categoriesData.map((cat: any) => {
     const style = styleMap[cat.name] || { icon: PackageCheck, color: "bg-slate-100 text-slate-600", gradient: "from-slate-500 to-slate-600" };
     return {
       title: cat.name,
+      slug: cat.slug,
       count: "Ürünleri İncele",
       icon: style.icon,
       color: style.color,
@@ -168,8 +171,8 @@ export default async function Home() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {categories.map((cat, idx) => (
-                <Link key={idx} href={`/products?category=${encodeURIComponent(cat.title)}`}>
+              {categories.map((cat: any, idx: number) => (
+                <Link key={idx} href={`/products?category=${encodeURIComponent(cat.slug)}`}>
                   <div className="group cursor-pointer h-full relative overflow-hidden rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1 bg-gradient-to-br from-white to-slate-50 border border-slate-100">
                     <div className={`absolute inset-0 bg-gradient-to-br ${cat.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-500 z-10`}></div>
 
@@ -196,41 +199,19 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Featured Products */}
-        <section className="container mx-auto px-4 py-12 mb-24">
-          <div className="flex items-center justify-between mb-12">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Öne Çıkan Ürünler</h2>
-              <p className="text-slate-500">En çok tercih edilen medikal ürünler</p>
-            </div>
-            <div className="flex gap-3 hidden md:flex">
-              <Button variant="outline" className="rounded-full px-6 border-blue-200 text-blue-700 bg-blue-50 hover:bg-blue-100 font-medium">Yeni Gelenler</Button>
-              <Button variant="ghost" className="rounded-full px-6 text-slate-500 hover:text-slate-900 hover:bg-slate-100">Çok Satanlar</Button>
-            </div>
-          </div>
+        {/* Products Section */}
+        <HomeProductSection
+          latestProducts={products}
+          bestSellingProducts={bestSellingProducts}
+        />
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                id={product.id}
-                category={product.category?.name || "Genel"}
-                title={product.name}
-                code={product.code}
-                price={Number(product.price)}
-                image={product.image || ""}
-              />
-            ))}
-          </div>
-
-          <div className="mt-16 text-center">
-            <Link href="/products">
-              <Button variant="outline" size="lg" className="rounded-full px-12 py-7 h-auto text-lg border-slate-200 text-slate-700 hover:border-blue-200 hover:text-blue-700 hover:bg-blue-50 font-semibold transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-                Tüm Ürünleri İncele
-              </Button>
-            </Link>
-          </div>
-        </section>
+        <div className="container mx-auto px-4 mb-24 text-center">
+          <Link href="/products">
+            <Button variant="outline" size="lg" className="rounded-full px-12 py-7 h-auto text-lg border-slate-200 text-slate-700 hover:border-blue-200 hover:text-blue-700 hover:bg-blue-50 font-semibold transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+              Tüm Ürünleri İncele
+            </Button>
+          </Link>
+        </div>
 
         {/* B2B Banner */}
         <section className="container mx-auto px-4 mb-24">
@@ -264,6 +245,6 @@ export default async function Home() {
           </div>
         </section>
       </main>
-    </div>
+    </div >
   );
 }
