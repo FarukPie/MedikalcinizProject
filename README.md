@@ -2,6 +2,8 @@
 
 **Medikalciniz**, tıbbi ürünlerin satışı ve operasyonel yönetimi için geliştirilmiş, yüksek performanslı bir B2B/B2C e-ticaret çözümüdür. **Next.js 15** ve **React 19** mimarisi üzerinde koşan bu platform, sadece bir vitrin değil; arka planda stok, sipariş ve fatura süreçlerini yöneten güçlü bir **ERP (Kurumsal Kaynak Planlama)** altyapısına sahiptir.
 
+website linki: https://medikalciniz-project.vercel.app/
+
 
 ## ✨ Öne Çıkan Özellikler
 
