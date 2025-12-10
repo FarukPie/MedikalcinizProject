@@ -18,7 +18,8 @@ import {
     Bell,
     Search,
     LogOut,
-    Mail
+    Mail,
+    Activity
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ const sidebarItems = [
     { icon: Users, label: "Kullanıcılar", href: "/admin/users", roles: ["ADMIN"] },
     { icon: Shield, label: "Roller", href: "/admin/roles", roles: ["ADMIN"] },
     { icon: Package, label: "Ürünler", href: "/admin/products", roles: ["ADMIN", "SALES"] },
+    { icon: Activity, label: "Ürün Hareketleri", href: "/admin/urun-hareketleri", roles: ["ADMIN", "SALES"] },
     { icon: Warehouse, label: "Depo", href: "/admin/depo", roles: ["ADMIN", "SALES"] },
     { icon: FileText, label: "Teklif", href: "/admin/teklif", roles: ["ADMIN", "SALES", "CUSTOMER"] },
     { icon: Truck, label: "İrsaliye", href: "/admin/irsaliye", roles: ["ADMIN", "SALES"] },
@@ -89,6 +91,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                             </Link>
                         );
                     })}
+                </div>
+
+                <div className="px-3 py-2">
+                    <Button
+                        variant="ghost"
+                        onClick={() => signOut({ callbackUrl: "/" })}
+                        className="w-full justify-start gap-3 h-11 rounded-xl hover:bg-red-950/30 hover:text-red-400 text-slate-400 transition-all duration-200"
+                    >
+                        <LogOut className="w-5 h-5" />
+                        <span className="font-medium">Anasayfaya Dön</span>
+                    </Button>
                 </div>
 
                 <div className="p-4 border-t border-slate-800">

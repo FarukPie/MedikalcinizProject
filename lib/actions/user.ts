@@ -26,12 +26,12 @@ export async function createUser(formData: FormData) {
         const email = formData.get("email") as string
         const phone = formData.get("phone") as string
         const password = formData.get("password") as string
-        const roleName = formData.get("role") as string
+        const roleId = formData.get("role") as string
         const company = formData.get("company") as string
         const description = formData.get("description") as string
 
         // Validation
-        if (!email || !password || !name || !surname || !roleName) {
+        if (!email || !password || !name || !surname || !roleId) {
             return { success: false, message: "Lütfen tüm zorunlu alanları doldurunuz." }
         }
 
@@ -47,31 +47,28 @@ export async function createUser(formData: FormData) {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10)
 
-        // Map form role to UserRole enum
+        // Find Role record
         let userRole: UserRole = UserRole.CUSTOMER
-        if (roleName === 'admin') userRole = UserRole.ADMIN
-        if (roleName === 'sales') userRole = UserRole.SALES
-
-        // Find corresponding Role record for permissions
         let assignedRoleId = null
-        try {
-            // Capitalize first letter for Role name search (e.g. "admin" -> "Admin")
-            // Default to 'Müşteri' if no role provided or found
-            const targetRoleName = roleName ? (roleName.charAt(0).toUpperCase() + roleName.slice(1)) : 'Müşteri';
 
+        try {
             const roleRecord = await prisma.role.findUnique({
-                where: { name: targetRoleName }
+                where: { id: roleId }
             })
 
             if (roleRecord) {
                 assignedRoleId = roleRecord.id
+
+                // Map Role name to UserRole enum for backward compatibility / permissions
+                if (roleRecord.name === 'Yönetici' || roleRecord.name === 'Admin') userRole = UserRole.ADMIN
+                else if (roleRecord.name === 'Satışçı' || roleRecord.name === 'Sales') userRole = UserRole.SALES
+                else userRole = UserRole.CUSTOMER
             } else {
-                // Fallback to Müşteri if specific role not found (safety net)
-                const customerRole = await prisma.role.findUnique({ where: { name: 'Müşteri' } });
-                if (customerRole) assignedRoleId = customerRole.id;
+                return { success: false, message: "Seçilen rol bulunamadı." }
             }
         } catch (e) {
-            console.warn("Could not find role record for", roleName)
+            console.warn("Could not find role record for", roleId)
+            return { success: false, message: "Rol bilgisi alınamadı." }
         }
 
         // Create User
@@ -119,12 +116,12 @@ export async function updateUser(formData: FormData) {
         const email = formData.get("email") as string
         const phone = formData.get("phone") as string
         const password = formData.get("password") as string
-        const roleName = formData.get("role") as string
+        const roleId = formData.get("role") as string
         const company = formData.get("company") as string
         const description = formData.get("description") as string
 
         // Validation
-        if (!id || !email || !name || !surname || !roleName) {
+        if (!id || !email || !name || !surname || !roleId) {
             return { success: false, message: "Lütfen tüm zorunlu alanları doldurunuz." }
         }
 
@@ -140,23 +137,30 @@ export async function updateUser(formData: FormData) {
             return { success: false, message: "Bu e-posta adresi ile kayıtlı başka bir kullanıcı var." }
         }
 
-        // Map form role to UserRole enum
+        // Find Role record
         let userRole: UserRole = UserRole.CUSTOMER
-        if (roleName === 'admin') userRole = UserRole.ADMIN
-        if (roleName === 'sales') userRole = UserRole.SALES
-
-        // Find corresponding Role record for permissions
         let assignedRoleId = null
+
         try {
-            const roleSearchName = roleName.charAt(0).toUpperCase() + roleName.slice(1)
             const roleRecord = await prisma.role.findUnique({
-                where: { name: roleSearchName }
+                where: { id: roleId }
             })
+
             if (roleRecord) {
                 assignedRoleId = roleRecord.id
+
+                // Map Role name to UserRole enum
+                if (roleRecord.name === 'Yönetici' || roleRecord.name === 'Admin') userRole = UserRole.ADMIN
+                else if (roleRecord.name === 'Satışçı' || roleRecord.name === 'Sales') userRole = UserRole.SALES
+                else userRole = UserRole.CUSTOMER
+            } else {
+                // Keep existing role if not found? Or return error? 
+                // Based on plan, we expect a valid ID.
+                return { success: false, message: "Seçilen rol bulunamadı." }
             }
         } catch (e) {
-            console.warn("Could not find role record for", roleName)
+            console.warn("Could not find role record for", roleId)
+            return { success: false, message: "Rol bilgisi alınamadı." }
         }
 
         // Prepare update data

@@ -173,3 +173,84 @@ export async function getDashboardStats() {
         };
     }
 }
+
+export async function getCustomerDashboardStats(userEmail: string) {
+    try {
+        const partner = await prisma.partner.findFirst({
+            where: {
+                email: userEmail
+            }
+        });
+
+        if (!partner) {
+            // New customer without partner record - show empty stats
+            return {
+                totalOrders: { count: 0, amount: 0 },
+                activeOrders: { count: 0, amount: 0 },
+                completedOrders: { count: 0, amount: 0 },
+                totalPurchases: { count: 0, amount: 0 }
+            };
+        }
+
+        // 1. Total Orders (We consider Orders as "Alım" for customer context if they are buying)
+        const totalOrders = await prisma.order.aggregate({
+            _count: { id: true },
+            _sum: { totalAmount: true },
+            where: {
+                partnerId: partner.id
+            }
+        });
+
+        // 2. Active Orders
+        const activeOrders = await prisma.order.aggregate({
+            _count: { id: true },
+            _sum: { totalAmount: true },
+            where: {
+                partnerId: partner.id,
+                status: {
+                    in: [DocStatus.PENDING, DocStatus.APPROVED, DocStatus.SENT, DocStatus.DRAFT]
+                }
+            }
+        });
+
+        // 3. Completed Orders
+        const completedOrders = await prisma.order.aggregate({
+            _count: { id: true },
+            _sum: { totalAmount: true },
+            where: {
+                partnerId: partner.id,
+                status: {
+                    in: [DocStatus.COMPLETED, DocStatus.PAID]
+                }
+            }
+        });
+
+        return {
+            totalOrders: {
+                count: totalOrders._count.id,
+                amount: Number(totalOrders._sum.totalAmount || 0)
+            },
+            activeOrders: {
+                count: activeOrders._count.id,
+                amount: Number(activeOrders._sum.totalAmount || 0)
+            },
+            completedOrders: {
+                count: completedOrders._count.id,
+                amount: Number(completedOrders._sum.totalAmount || 0)
+            },
+            // For now, "Sales" and "Purchases" might be same if we only track Orders.
+            // If they are suppliers, we'd check Purchases.
+            // Let's assume the prompt meant "Orders" mostly.
+            totalPurchases: { count: 0, amount: 0 } // Placeholder if needed later
+        };
+
+    } catch (error) {
+        console.error("Error fetching customer dashboard stats:", error);
+        return {
+            totalOrders: { count: 0, amount: 0 },
+            activeOrders: { count: 0, amount: 0 },
+            completedOrders: { count: 0, amount: 0 },
+            totalPurchases: { count: 0, amount: 0 }
+        };
+    }
+}

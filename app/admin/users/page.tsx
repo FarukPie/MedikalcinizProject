@@ -16,10 +16,12 @@ import {
 import { UserDialog } from "@/components/admin/user-dialog";
 import { UserActionsCell } from "@/components/admin/user-actions-cell";
 import { getUsers } from "@/lib/actions/user";
+import { getRoles } from "@/lib/actions/role";
 import { UserRole } from "@prisma/client";
 
 export default async function UsersPage() {
     const users = await getUsers();
+    const roles = await getRoles();
 
     const getBadgeVariant = (role: UserRole) => {
         switch (role) {
@@ -61,7 +63,7 @@ export default async function UsersPage() {
                         Filtreler
                     </Button>
 
-                    <UserDialog />
+                    <UserDialog roles={roles} />
                 </div>
             </div>
 
@@ -99,8 +101,10 @@ export default async function UsersPage() {
                                     <TableCell>
                                         <div className="flex items-center gap-2 text-slate-600">
                                             <Building2 className="w-4 h-4 text-slate-400" />
-                                            {/* Company is not in DB yet, using placeholder */}
-                                            Medikalciniz
+
+                                            {user.company === 'medikalciniz' ? 'Medikalciniz' :
+                                                user.company === 'other' ? 'Diğer' :
+                                                    user.company || '-'}
                                         </div>
                                     </TableCell>
                                     <TableCell>

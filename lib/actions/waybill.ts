@@ -117,7 +117,17 @@ export async function getWaybillById(id: string) {
         const waybill = await prisma.waybill.findUnique({
             where: { id },
             include: {
-                items: true
+                items: true,
+                partner: {
+                    select: {
+                        id: true,
+                        name: true,
+                        taxNumber: true,
+                        address: true,
+                        phone: true,
+                        email: true
+                    }
+                }
             }
         });
 

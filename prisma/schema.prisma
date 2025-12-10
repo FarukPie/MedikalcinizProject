@@ -36,6 +36,14 @@ enum TransactionType {
   CREDIT
 }
 
+enum StockMovementType {
+  MANUAL_ADJUSTMENT
+  SALE
+  PURCHASE
+  RETURN
+  COUNT_CORRECTION
+}
+
 // Models
 
 model User {
@@ -159,8 +167,27 @@ model Product {
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
   OrderItem OrderItem[]
+  movements StockMovement[]
+  history   ProductHistory[]
 
   @@map("products")
+}
+
+model ProductHistory {
+  id          String   @id @default(uuid())
+  action      String
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  description String?
+  oldValue    String?
+  newValue    String?
+  
+  user        String?
+  
+  createdAt   DateTime @default(now())
+
+  @@map("product_history")
 }
 
 model Proposal {
@@ -381,4 +408,20 @@ model ContactMessage {
   createdAt DateTime @default(now())
 
   @@map("contact_messages")
+}
+
+model StockMovement {
+  id          String            @id @default(uuid())
+  type        StockMovementType
+  quantity    Int
+  oldStock    Int
+  newStock    Int
+  description String?
+  
+  productId   String
+  product     Product           @relation(fields: [productId], references: [id])
+  
+  createdAt   DateTime          @default(now())
+
+  @@map("stock_movements")
 }

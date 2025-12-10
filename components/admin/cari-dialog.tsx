@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Users } from "lucide-react";
+import { Plus, Users, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -29,9 +29,10 @@ import { Edit2 } from "lucide-react";
 
 interface CariDialogProps {
     partner?: any;
+    readonly?: boolean;
 }
 
-export function CariDialog({ partner }: CariDialogProps) {
+export function CariDialog({ partner, readonly = false }: CariDialogProps) {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -74,6 +75,8 @@ export function CariDialog({ partner }: CariDialogProps) {
     }, [partner, isDialogOpen]);
 
     const handleSubmit = async () => {
+        if (readonly) return;
+
         if (!name) {
             toast.error("Lütfen cari adını giriniz.");
             return;
@@ -133,9 +136,15 @@ export function CariDialog({ partner }: CariDialogProps) {
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
                 {partner ? (
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-slate-900 hover:bg-slate-100">
-                        <Edit2 className="w-4 h-4" />
-                    </Button>
+                    readonly ? (
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-blue-600 hover:bg-blue-50">
+                            <Eye className="w-4 h-4" />
+                        </Button>
+                    ) : (
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-slate-900 hover:bg-slate-100">
+                            <Edit2 className="w-4 h-4" />
+                        </Button>
+                    )
                 ) : (
                     <Button suppressHydrationWarning className="gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20">
                         <Plus className="w-4 h-4" />
@@ -151,7 +160,7 @@ export function CariDialog({ partner }: CariDialogProps) {
                             <Users className="w-4 h-4" />
                         </div>
                         <DialogTitle className="text-xl font-bold text-slate-900">
-                            {partner ? "Cari Düzenle" : "Yeni Cari Ekle"}
+                            {readonly ? "Cari Detayı" : (partner ? "Cari Düzenle" : "Yeni Cari Ekle")}
                         </DialogTitle>
                     </div>
                 </DialogHeader>
@@ -168,11 +177,12 @@ export function CariDialog({ partner }: CariDialogProps) {
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     className="bg-white border-slate-200"
+                                    disabled={readonly}
                                 />
                             </div>
                             <div className="space-y-2">
                                 <Label className="text-xs font-semibold text-slate-500 uppercase">Cari Tipi <span className="text-red-500">*</span></Label>
-                                <Select value={type} onValueChange={setType}>
+                                <Select value={type} onValueChange={setType} disabled={readonly}>
                                     <SelectTrigger className="bg-white border-slate-200">
                                         <SelectValue />
                                     </SelectTrigger>
@@ -194,6 +204,7 @@ export function CariDialog({ partner }: CariDialogProps) {
                                     value={vkn}
                                     onChange={(e) => setVkn(e.target.value)}
                                     className="bg-white border-slate-200"
+                                    disabled={readonly}
                                 />
                             </div>
                             <div className="space-y-2">
@@ -203,6 +214,7 @@ export function CariDialog({ partner }: CariDialogProps) {
                                     value={contactName}
                                     onChange={(e) => setContactName(e.target.value)}
                                     className="bg-white border-slate-200"
+                                    disabled={readonly}
                                 />
                             </div>
                         </div>
@@ -216,6 +228,7 @@ export function CariDialog({ partner }: CariDialogProps) {
                                     value={contactPhone}
                                     onChange={(e) => setContactPhone(e.target.value)}
                                     className="bg-white border-slate-200"
+                                    disabled={readonly}
                                 />
                             </div>
                             <div className="space-y-2">
@@ -226,6 +239,7 @@ export function CariDialog({ partner }: CariDialogProps) {
                                     value={contactEmail}
                                     onChange={(e) => setContactEmail(e.target.value)}
                                     className="bg-white border-slate-200"
+                                    disabled={readonly}
                                 />
                             </div>
                         </div>
@@ -238,6 +252,7 @@ export function CariDialog({ partner }: CariDialogProps) {
                                 className="min-h-[80px] bg-white border-slate-200 resize-none"
                                 value={address}
                                 onChange={(e) => setAddress(e.target.value)}
+                                disabled={readonly}
                             />
                         </div>
 
@@ -249,6 +264,7 @@ export function CariDialog({ partner }: CariDialogProps) {
                                 className="min-h-[80px] bg-white border-slate-200 resize-none"
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
+                                disabled={readonly}
                             />
                         </div>
                     </div>
@@ -257,15 +273,19 @@ export function CariDialog({ partner }: CariDialogProps) {
                 {/* Fixed Footer */}
                 <DialogFooter className="px-6 py-4 border-t bg-gray-50 flex justify-between items-center w-full z-10">
                     <DialogClose asChild>
-                        <Button variant="outline" className="rounded-lg border-slate-200 hover:bg-slate-50">İptal</Button>
+                        <Button variant="outline" className="rounded-lg border-slate-200 hover:bg-slate-50">
+                            {readonly ? "Kapat" : "İptal"}
+                        </Button>
                     </DialogClose>
-                    <Button
-                        onClick={handleSubmit}
-                        disabled={isLoading}
-                        className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg shadow-blue-600/20"
-                    >
-                        {isLoading ? "Kaydediliyor..." : "Kaydet"}
-                    </Button>
+                    {!readonly && (
+                        <Button
+                            onClick={handleSubmit}
+                            disabled={isLoading}
+                            className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg shadow-blue-600/20"
+                        >
+                            {isLoading ? "Kaydediliyor..." : "Kaydet"}
+                        </Button>
+                    )}
                 </DialogFooter>
             </DialogContent>
         </Dialog>

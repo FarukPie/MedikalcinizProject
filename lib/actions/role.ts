@@ -96,3 +96,16 @@ export async function updateRole(roleId: string, data: {
         return { success: false, error: "Rol güncellenirken bir hata oluştu." };
     }
 }
+
+export async function getRoles() {
+    try {
+        const roles = await prisma.role.findMany({
+            orderBy: { name: 'asc' }
+        });
+        return roles;
+    } catch (error) {
+        console.error("Error fetching roles:", error);
+        return [];
+    }
+}
+

@@ -14,9 +14,12 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DashboardChart } from "@/components/admin/dashboard-chart";
-import { getDashboardStats } from "@/lib/actions/dashboard";
+import { getDashboardStats, getCustomerDashboardStats } from "@/lib/actions/dashboard";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
+import { auth } from "@/auth";
+import { CustomerDashboardStats } from "@/components/admin/customer-dashboard-stats";
+import { UserRole } from "@prisma/client";
 
 function formatCurrency(amount: number) {
     return new Intl.NumberFormat("tr-TR", {
@@ -27,6 +30,27 @@ function formatCurrency(amount: number) {
 }
 
 export default async function AdminDashboard() {
+    const session = await auth();
+    const userRole = session?.user?.role;
+    const userEmail = session?.user?.email;
+
+    if (userRole === UserRole.CUSTOMER) {
+        if (!userEmail) {
+            return (
+                <div className="p-8">
+                    <h1 className="text-2xl font-bold text-red-600">Hata</h1>
+                    <p className="text-slate-600">Kullanıcı e-posta adresi bulunamadı.</p>
+                </div>
+            );
+        }
+
+        const customerStats = await getCustomerDashboardStats(userEmail);
+
+        if (customerStats) {
+            return <CustomerDashboardStats stats={customerStats} userName={session?.user?.name || "Sayın Müşterimiz"} />;
+        }
+    }
+
     const { stats, recentOrders, chartData } = await getDashboardStats();
 
     const statCards = [

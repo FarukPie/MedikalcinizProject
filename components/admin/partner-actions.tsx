@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CariDialog } from "@/components/admin/cari-dialog";
 import { deletePartner } from "@/lib/actions/partner";
@@ -45,9 +45,8 @@ export function PartnerActions({ partner }: PartnerActionsProps) {
     return (
         <>
             <div className="flex items-center justify-end gap-2">
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-blue-600 hover:bg-blue-50">
-                    <Eye className="w-4 h-4" />
-                </Button>
+                {/* View Dialog */}
+                <CariDialog partner={partner} readonly={true} />
 
                 {/* Edit Dialog */}
                 <CariDialog partner={partner} />

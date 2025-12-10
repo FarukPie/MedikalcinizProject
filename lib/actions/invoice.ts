@@ -2,7 +2,8 @@
 
 import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { DocStatus, TransactionType } from '@prisma/client'
+import { DocStatus, TransactionType, StockMovementType } from '@prisma/client'
+import { logStockMovement } from './stock-movement'
 
 export async function getInvoices() {
     try {
@@ -165,15 +166,42 @@ export async function createInvoice(data: any) {
             // 4. Update Stock
             for (const item of processedItems) {
                 if (item.productId) {
-                    if (isSales) {
-                        await tx.product.update({
-                            where: { id: item.productId },
-                            data: { stock: { decrement: item.quantity } }
-                        });
-                    } else {
-                        await tx.product.update({
-                            where: { id: item.productId },
-                            data: { stock: { increment: item.quantity } }
+                    // Fetch current product to get old stock
+                    const product = await tx.product.findUnique({
+                        where: { id: item.productId }
+                    });
+
+                    if (product) {
+                        const oldStock = product.stock;
+                        let newStock = oldStock;
+                        let quantityChange = 0;
+                        let movementType = isSales ? StockMovementType.SALE : StockMovementType.PURCHASE;
+
+                        if (isSales) {
+                            newStock = oldStock - item.quantity;
+                            quantityChange = -item.quantity;
+                            await tx.product.update({
+                                where: { id: item.productId },
+                                data: { stock: { decrement: item.quantity } }
+                            });
+                        } else {
+                            newStock = oldStock + item.quantity;
+                            quantityChange = item.quantity;
+                            await tx.product.update({
+                                where: { id: item.productId },
+                                data: { stock: { increment: item.quantity } }
+                            });
+                        }
+
+                        // Log movement
+                        await logStockMovement({
+                            productId: item.productId,
+                            type: movementType,
+                            quantity: quantityChange,
+                            oldStock: oldStock,
+                            newStock: newStock,
+                            description: `Fatura: ${number}`,
+                            tx // Pass transaction
                         });
                     }
                 }
@@ -189,5 +217,42 @@ export async function createInvoice(data: any) {
         console.error('Error creating invoice:', error);
         console.error('Error details:', JSON.stringify(error, null, 2));
         return { success: false, error: "Fatura oluşturulurken bir hata oluştu: " + (error.message || error) };
+    }
+}
+
+export async function getInvoiceById(id: string) {
+    try {
+        const invoice = await prisma.invoice.findUnique({
+            where: { id },
+            include: {
+                partner: true,
+                items: true
+            }
+        });
+
+        if (!invoice) return null;
+
+        return {
+            ...invoice,
+            date: invoice.date.toLocaleDateString('tr-TR'),
+            dueDate: invoice.dueDate ? invoice.dueDate.toLocaleDateString('tr-TR') : '-',
+            subTotal: Number(invoice.subTotal),
+            taxTotal: Number(invoice.taxTotal),
+            totalAmount: Number(invoice.totalAmount),
+            partner: {
+                ...invoice.partner,
+                balance: Number(invoice.partner.balance)
+            },
+            items: invoice.items.map((item: any) => ({
+                ...item,
+                price: Number(item.price),
+                total: Number(item.total),
+                // Fallback for unit if not in schema (fetching product would be better but relation missing)
+                unit: "Adet"
+            }))
+        };
+    } catch (error) {
+        console.error('Error fetching invoice:', error);
+        return null;
     }
 }

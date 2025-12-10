@@ -24,15 +24,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { createUser, updateUser } from "@/lib/actions/user";
-import { User } from "@prisma/client";
+import { User, Role } from "@prisma/client";
 
 interface UserDialogProps {
     userToEdit?: any;
+    roles?: Role[];
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
 }
 
-export function UserDialog({ userToEdit, open, onOpenChange }: UserDialogProps) {
+export function UserDialog({ userToEdit, roles = [], open, onOpenChange }: UserDialogProps) {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -185,14 +186,24 @@ export function UserDialog({ userToEdit, open, onOpenChange }: UserDialogProps) 
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="role" className="text-sm font-medium text-slate-700">Rol <span className="text-red-500">*</span></Label>
-                                <Select name="role" defaultValue={userToEdit?.role?.toLowerCase()} required>
+                                <Select name="role" defaultValue={userToEdit?.assignedRoleId} required>
                                     <SelectTrigger className="rounded-lg border-slate-200">
                                         <SelectValue placeholder="Rol seçiniz" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="admin">Yönetici</SelectItem>
-                                        <SelectItem value="sales">Satışçı</SelectItem>
-                                        <SelectItem value="customer">Müşteri</SelectItem>
+                                        {roles.length > 0 ? (
+                                            roles.map((role) => (
+                                                <SelectItem key={role.id} value={role.id}>
+                                                    {role.name}
+                                                </SelectItem>
+                                            ))
+                                        ) : (
+                                            <>
+                                                <SelectItem value="admin">Yönetici</SelectItem>
+                                                <SelectItem value="sales">Satışçı</SelectItem>
+                                                <SelectItem value="customer">Müşteri</SelectItem>
+                                            </>
+                                        )}
                                     </SelectContent>
                                 </Select>
                             </div>

@@ -1,11 +1,26 @@
 'use server'
 import prisma from '@/lib/prisma'
 import { revalidatePath } from 'next/cache'
-import { Product, Category } from '@prisma/client'
+import { Product, Category, StockMovementType } from '@prisma/client'
+import { logStockMovement } from './stock-movement'
+import { logProductHistory } from './history'
+import { auth } from '@/auth'
 
 export async function createProduct(data: any) {
     try {
-        await prisma.product.create({
+        // Check for existing code
+        const existingProduct = await prisma.product.findUnique({
+            where: { code: data.code }
+        })
+
+        if (existingProduct) {
+            return { success: false, error: "Bu ürün kodu zaten mevcut." }
+        }
+
+        const session = await auth();
+        const userName = session?.user?.name || session?.user?.email || "Bilinmeyen Kullanıcı";
+
+        const product = await prisma.product.create({
             data: {
                 code: data.code,
                 name: data.name,
@@ -23,6 +38,14 @@ export async function createProduct(data: any) {
                 isActive: data.isActive === 'active' || data.isActive === true,
             },
         })
+
+        await logProductHistory({
+            action: 'CREATE',
+            productId: product.id,
+            description: 'Ürün oluşturuldu',
+            newValue: product.name,
+            user: userName
+        });
         revalidatePath('/admin/products')
         return { success: true, message: "Ürün başarıyla oluşturuldu." }
     } catch (error: any) {
@@ -33,6 +56,24 @@ export async function createProduct(data: any) {
 
 export async function updateProduct(id: string, data: any) {
     try {
+        // Check for existing code (excluding current product)
+        const existingProduct = await prisma.product.findFirst({
+            where: {
+                code: data.code,
+                NOT: { id }
+            }
+        })
+
+        if (existingProduct) {
+            return { success: false, error: "Bu ürün kodu zaten mevcut." }
+        }
+
+        // Fetch current product for history logging
+        const currentProduct = await prisma.product.findUnique({ where: { id } });
+
+        const session = await auth();
+        const userName = session?.user?.name || session?.user?.email || "Bilinmeyen Kullanıcı";
+
         await prisma.product.update({
             where: { id },
             data: {
@@ -52,6 +93,30 @@ export async function updateProduct(id: string, data: any) {
                 isActive: data.isActive === 'active' || data.isActive === true,
             },
         })
+
+        if (currentProduct) {
+            const newSellPrice = parseFloat(data.sellPrice);
+            const oldSellPrice = Number(currentProduct.sellPrice);
+
+            if (newSellPrice !== oldSellPrice) {
+                await logProductHistory({
+                    action: 'PRICE_CHANGE',
+                    productId: id,
+                    description: 'Satış fiyatı güncellendi',
+                    oldValue: `${oldSellPrice}`,
+                    newValue: `${newSellPrice}`,
+                    user: userName
+                });
+            } else {
+                // Log generic update if not price change
+                await logProductHistory({
+                    action: 'UPDATE',
+                    productId: id,
+                    description: 'Ürün bilgileri güncellendi',
+                    user: userName
+                });
+            }
+        }
         revalidatePath('/admin/products')
         return { success: true, message: "Ürün başarıyla güncellendi." }
     } catch (error: any) {
@@ -291,6 +356,9 @@ export async function updateProductStock(prevState: any, formData: FormData) {
         const product = await prisma.product.findUnique({ where: { id: productId } });
         if (!product) return { success: false, error: "Ürün bulunamadı." };
 
+        const session = await auth();
+        const userName = session?.user?.name || session?.user?.email || "Bilinmeyen Kullanıcı";
+
         if (type === "out") {
             if (product.stock < quantity) {
                 return { success: false, error: "Yetersiz stok!" };
@@ -299,14 +367,41 @@ export async function updateProductStock(prevState: any, formData: FormData) {
                 where: { id: productId },
                 data: { stock: { decrement: quantity } }
             });
+
+            await logStockMovement({
+                productId,
+                type: StockMovementType.MANUAL_ADJUSTMENT,
+                quantity: -quantity,
+                oldStock: product.stock,
+                newStock: product.stock - quantity,
+                description: description || "Stok azaltma işlemi"
+            });
         } else if (type === "in") {
             await prisma.product.update({
                 where: { id: productId },
                 data: { stock: { increment: quantity } }
             });
+
+            await logStockMovement({
+                productId,
+                type: StockMovementType.MANUAL_ADJUSTMENT,
+                quantity: quantity,
+                oldStock: product.stock,
+                newStock: product.stock + quantity,
+                description: description || "Stok ekleme işlemi"
+            });
         } else {
             return { success: false, error: "Geçersiz işlem tipi." };
         }
+
+        await logProductHistory({
+            action: type === 'out' ? 'STOCK_EXIT' : 'STOCK_ENTRY',
+            productId,
+            description: description || (type === 'out' ? 'Stok düşüşü' : 'Stok artışı'),
+            oldValue: `${product.stock}`,
+            newValue: `${type === 'out' ? product.stock - quantity : product.stock + quantity}`,
+            user: userName
+        });
 
         revalidatePath('/admin/products');
         return { success: true, message: "Stok güncellendi." };
@@ -324,9 +419,33 @@ export async function setProductStock(prevState: any, formData: FormData) {
         if (!productId) return { success: false, error: "Ürün seçilmedi." };
         if (isNaN(quantity) || quantity < 0) return { success: false, error: "Geçersiz miktar." };
 
+        const product = await prisma.product.findUnique({ where: { id: productId } });
+        if (!product) return { success: false, error: "Ürün bulunamadı." };
+
+        const session = await auth();
+        const userName = session?.user?.name || session?.user?.email || "Bilinmeyen Kullanıcı";
+
         await prisma.product.update({
             where: { id: productId },
             data: { stock: quantity }
+        });
+
+        await logStockMovement({
+            productId,
+            type: StockMovementType.COUNT_CORRECTION,
+            quantity: quantity - product.stock,
+            oldStock: product.stock,
+            newStock: quantity,
+            description: "Sayım düzeltme işlemi"
+        });
+
+        await logProductHistory({
+            action: 'STOCK_CORRECTION',
+            productId,
+            description: 'Sayım düzeltme işlemi',
+            oldValue: `${product.stock}`,
+            newValue: `${quantity}`,
+            user: userName
         });
 
         revalidatePath('/admin/products');

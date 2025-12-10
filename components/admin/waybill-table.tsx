@@ -27,7 +27,25 @@ interface WaybillTableProps {
     products: any[];
 }
 
+import { WaybillDetailDialog } from "@/components/admin/waybill-detail-dialog"; // Import new dialog
+import { useState } from "react";
+
 export function WaybillTable({ data, partners, products }: WaybillTableProps) {
+    const [selectedWaybillId, setSelectedWaybillId] = useState<string | null>(null);
+    const [isDetailOpen, setIsDetailOpen] = useState(false);
+    const [autoPrint, setAutoPrint] = useState(false);
+
+    const handleView = (id: string) => {
+        setSelectedWaybillId(id);
+        setAutoPrint(false);
+        setIsDetailOpen(true);
+    };
+
+    const handlePrint = (id: string) => {
+        setSelectedWaybillId(id);
+        setAutoPrint(true);
+        setIsDetailOpen(true);
+    };
     const handleDelete = async (id: string) => {
         if (confirm("Bu irsaliyeyi silmek istediğinize emin misiniz?")) {
             const result = await deleteWaybill(id);
@@ -91,10 +109,20 @@ export function WaybillTable({ data, partners, products }: WaybillTableProps) {
                                 </TableCell>
                                 <TableCell className="text-right">
                                     <div className="flex items-center justify-end gap-2">
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-blue-600 hover:bg-blue-50">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-slate-500 hover:text-blue-600 hover:bg-blue-50"
+                                            onClick={() => handleView(waybill.id)}
+                                        >
                                             <Eye className="w-4 h-4" />
                                         </Button>
-                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-slate-900 hover:bg-slate-100">
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-8 w-8 text-slate-500 hover:text-slate-900 hover:bg-slate-100"
+                                            onClick={() => handlePrint(waybill.id)}
+                                        >
                                             <Printer className="w-4 h-4" />
                                         </Button>
 
@@ -125,6 +153,14 @@ export function WaybillTable({ data, partners, products }: WaybillTableProps) {
                     )}
                 </TableBody>
             </Table>
-        </div>
+
+
+            <WaybillDetailDialog
+                waybillId={selectedWaybillId}
+                open={isDetailOpen}
+                onOpenChange={setIsDetailOpen}
+                autoPrint={autoPrint}
+            />
+        </div >
     );
 }

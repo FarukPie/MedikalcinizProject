@@ -133,3 +133,95 @@ export async function getProposals() {
         return [];
     }
 }
+
+export async function getProposalById(id: string) {
+    try {
+        const proposal = await prisma.proposal.findUnique({
+            where: { id },
+            include: {
+                partner: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        phone: true,
+                        address: true
+                    }
+                },
+                items: true
+            }
+        });
+
+        if (!proposal) return null;
+
+        return {
+            ...proposal,
+            totalAmount: Number(proposal.totalAmount),
+            date: proposal.date.toLocaleDateString('tr-TR'),
+            validUntil: proposal.validUntil ? proposal.validUntil.toLocaleDateString('tr-TR') : '-',
+            items: proposal.items.map((item: any) => ({
+                ...item,
+                price: Number(item.price),
+                total: Number(item.total)
+            }))
+        };
+    } catch (error) {
+        console.error('Error fetching proposal:', error);
+        return null;
+    }
+}
+
+export async function convertProposalToOrder(id: string) {
+    try {
+        const proposal = await prisma.proposal.findUnique({
+            where: { id },
+            include: { items: true }
+        });
+
+        if (!proposal) {
+            return { success: false, error: "Teklif bulunamadı." };
+        }
+
+        if (proposal.status === DocStatus.APPROVED || proposal.status === DocStatus.COMPLETED) {
+            return { success: false, error: "Bu teklif zaten onaylanmış." };
+        }
+
+        // Generate Order Number
+        const count = await prisma.order.count();
+        const orderNumber = `SIP-${new Date().getFullYear()}-${(count + 1).toString().padStart(4, '0')}`;
+
+        // Create Order
+        await prisma.$transaction([
+            prisma.order.create({
+                data: {
+                    number: orderNumber,
+                    date: new Date(),
+                    status: DocStatus.PENDING,
+                    partnerId: proposal.partnerId,
+                    totalAmount: proposal.totalAmount,
+                    items: {
+                        create: proposal.items.map((item: any) => ({
+                            productId: item.productId,
+                            productName: item.productName,
+                            quantity: item.quantity,
+                            price: item.price,
+                            total: item.total
+                        }))
+                    }
+                }
+            }),
+            prisma.proposal.update({
+                where: { id },
+                data: { status: DocStatus.APPROVED }
+            })
+        ]);
+
+        revalidatePath('/admin/teklif');
+        revalidatePath('/admin/siparisler');
+        return { success: true, message: "Teklif başarıyla siparişe dönüştürüldü." };
+
+    } catch (error: any) {
+        console.error('Error converting proposal:', error);
+        return { success: false, error: "Dönüştürme işlemi başarısız oldu." };
+    }
+}
